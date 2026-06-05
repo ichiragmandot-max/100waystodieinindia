@@ -402,10 +402,12 @@ jobs:
 
             if not result:
               return None
-            if result.get('skip'):
-              print(f'  Skipped (score={result.get("score",0)})')
-              return None
 
+            # Normalise keys — strip stray quotes Claude occasionally wraps around them
+            result = {k.strip().strip('"').strip("'"): v for k, v in result.items()}
+
+            if result.get('skip'):
+              return None
             # Validate required fields
             required = ['date', 'tag', 'cat', 'headline', 'em_phrase', 'body', 'score']
             missing  = [k for k in required if not result.get(k) and result.get(k) != 0]
