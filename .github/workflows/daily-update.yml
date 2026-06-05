@@ -80,13 +80,6 @@ jobs:
 
           def get_existing_urls():
             return set()
-	    #req = urllib.request.Request(
-            #  SUPABASE_URL + '/rest/v1/deaths?select=source_url',
-            #  headers={'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY}
-            #)
-            with urllib.request.urlopen(req) as r:
-              data = json.loads(r.read())
-            return {row['source_url'] for row in data}
 
           def get_next_id():
             req = urllib.request.Request(
