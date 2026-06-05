@@ -24,615 +24,615 @@ jobs:
           MODE: ${{ github.event.inputs.mode || 'daily' }}
         run: |
           python3 << 'EOF'
-import urllib.request, urllib.parse, urllib.error
-import json, os, datetime, re, time, html
-from email.utils import parsedate_to_datetime
-
-# ── CONFIG ────────────────────────────────────────────────────────
-ANTHROPIC_KEY = os.environ['ANTHROPIC_API_KEY']
-BASE_URL      = os.environ['SUPABASE_URL'].rstrip('/')
-SUPABASE_KEY  = os.environ['SUPABASE_KEY']
-MODE          = os.environ.get('MODE', 'daily').strip().lower()
-
-print(f'Mode: {MODE}')
-print(f'Supabase: {BASE_URL[:30]}...')
-
-QUERIES = [
-  'India death fire accident negligence',
-  'India stampede crushed death crowd',
-  'India road accident bridge collapse death',
-  'India rape murder woman killed negligence',
-  'India factory explosion worker killed safety',
-  'India flood drowning drainage failure death',
-  'India hospital death negligence oxygen shortage',
-  'India sewer death manual scavenging worker',
-  'India child death borewell school collapse',
-  'India pothole accident death road',
-  'India train derailment accident death',
-  'India building collapse death',
-  'India farmer suicide debt crop failure',
-  'India heatwave death state failure',
-  'India custodial death police brutality',
-  'India electrocution death exposed wire',
-  'India gas pipeline explosion death',
-  'India flyover collapse construction death',
-  'India food poisoning death school hospital',
-  'India boat capsize river drowning',
-]
-
-UNSPLASH_FALLBACK = {
-  'fire':        'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1600&q=80&auto=format&fit=crop',
-  'road':        'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=1600&q=80&auto=format&fit=crop',
-  'women':       'https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?w=1600&q=80&auto=format&fit=crop',
-  'student':     'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1600&q=80&auto=format&fit=crop',
-  'infra':       'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=1600&q=80&auto=format&fit=crop',
-  'medical':     'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=1600&q=80&auto=format&fit=crop',
-  'labour':      'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=1600&q=80&auto=format&fit=crop',
-  'stampede':    'https://images.unsplash.com/photo-1533105079780-92b9be482077?w=1600&q=80&auto=format&fit=crop',
-  'system':      'https://images.unsplash.com/photo-1469398715555-76331a6e7b53?w=1600&q=80&auto=format&fit=crop',
-  'environment': 'https://images.unsplash.com/photo-1547683905-f686c993aae5?w=1600&q=80&auto=format&fit=crop',
-}
-
-# ── HELPERS ───────────────────────────────────────────────────────
-
-def http_get(url, headers=None, timeout=12):
-  """Simple GET, returns (body_str, final_url) or (None, None) on failure."""
-  req = urllib.request.Request(url, headers={
-    'User-Agent': 'Mozilla/5.0 (compatible; NewsBot/1.0)',
-    **(headers or {})
-  })
-  try:
-    with urllib.request.urlopen(req, timeout=timeout) as r:
-      charset = 'utf-8'
-      ct = r.headers.get('Content-Type', '')
-      m = re.search(r'charset=([^\s;]+)', ct)
-      if m:
-        charset = m.group(1).replace('"','').strip()
-      return r.read().decode(charset, errors='replace'), r.url
-  except Exception as e:
-    print(f'  GET failed {url[:60]}: {e}')
-    return None, None
-
-def supabase_req(method, path, payload=None, params=None):
-  """Make a Supabase REST API call. Returns parsed JSON or None."""
-  url = BASE_URL + '/rest/v1/' + path
-  if params:
-    url += ('&' if '?' in url else '?') + urllib.parse.urlencode(params)
-  data = json.dumps(payload).encode() if payload is not None else None
-  req = urllib.request.Request(url, data=data, method=method, headers={
-    'apikey':        SUPABASE_KEY,
-    'Authorization': 'Bearer ' + SUPABASE_KEY,
-    'Content-Type':  'application/json',
-    'Prefer':        'return=minimal',
-  })
-  try:
-    with urllib.request.urlopen(req, timeout=20) as r:
-      body = r.read()
-      return json.loads(body) if body else None
-  except urllib.error.HTTPError as e:
-    body = e.read().decode(errors='replace')
-    print(f'  Supabase {method} {path[:50]} → {e.code}: {body[:200]}')
-    return None
-
-def extract_publisher(url):
-  """Extract clean publisher name from URL domain."""
-  try:
-    domain = urllib.parse.urlparse(url).netloc.lower()
-    domain = re.sub(r'^www\.', '', domain)
-    KNOWN = {
-      'thehindu.com':         'The Hindu',
-      'ndtv.com':             'NDTV',
-      'indianexpress.com':    'Indian Express',
-      'timesofindia.indiatimes.com': 'Times of India',
-      'timesofindia.com':     'Times of India',
-      'bbc.com':              'BBC',
-      'bbc.co.uk':            'BBC',
-      'reuters.com':          'Reuters',
-      'theguardian.com':      'The Guardian',
-      'hindustantimes.com':   'Hindustan Times',
-      'telegraphindia.com':   'The Telegraph',
-      'deccanherald.com':     'Deccan Herald',
-      'theprint.in':          'The Print',
-      'thewire.in':           'The Wire',
-      'scroll.in':            'Scroll',
-      'news18.com':           'News18',
-      'aajtak.in':            'Aaj Tak',
-      'abplive.com':          'ABP Live',
-      'zeenews.india.com':    'Zee News',
-      'indiatoday.in':        'India Today',
-      'tribuneindia.com':     'Tribune India',
-      'business-standard.com':'Business Standard',
-      'livemint.com':         'Mint',
-      'financialexpress.com': 'Financial Express',
-      'downtoearth.org.in':   'Down to Earth',
-      'en.wikipedia.org':     'Wikipedia',
-      'thewire.in':           'The Wire',
-    }
-    return KNOWN.get(domain, domain.split('.')[0].title())
-  except:
-    return 'Unknown'
-
-def parse_pub_date(date_str):
-  """Parse RSS pubDate to datetime. Returns None on failure."""
-  if not date_str:
-    return None
-  try:
-    return parsedate_to_datetime(date_str.strip())
-  except:
-    pass
-  try:
-    for fmt in ('%a, %d %b %Y %H:%M:%S %z', '%d %b %Y %H:%M:%S %z'):
-      try:
-        return datetime.datetime.strptime(date_str.strip(), fmt)
-      except:
-        pass
-  except:
-    pass
-  return None
-
-def extract_og_image(html_text, base_url):
-  """
-  Extract image URL from article HTML.
-  Priority: og:image → twitter:image → first large img src → None
-  """
-  if not html_text:
-    return None
-  # og:image
-  m = re.search(r'<meta[^>]+property=["\']og:image["\'][^>]+content=["\']([^"\']+)["\']', html_text, re.I)
-  if not m:
-    m = re.search(r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:image["\']', html_text, re.I)
-  if m:
-    url = m.group(1).strip()
-    if url.startswith('http'):
-      return url
-  # twitter:image
-  m = re.search(r'<meta[^>]+name=["\']twitter:image["\'][^>]+content=["\']([^"\']+)["\']', html_text, re.I)
-  if not m:
-    m = re.search(r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+name=["\']twitter:image["\']', html_text, re.I)
-  if m:
-    url = m.group(1).strip()
-    if url.startswith('http'):
-      return url
-  # schema.org
-  m = re.search(r'"image"\s*:\s*["\']?(https://[^"\'<\s,\]]+)', html_text)
-  if m:
-    return m.group(1).strip()
-  return None
-
-def extract_article_text(html_text):
-  """
-  Strip HTML and return clean plain text (first 2000 chars).
-  Falls back gracefully on any error.
-  """
-  if not html_text:
-    return ''
-  try:
-    # Remove script/style blocks
-    text = re.sub(r'<script[\s\S]*?</script>', ' ', html_text, flags=re.I)
-    text = re.sub(r'<style[\s\S]*?</style>', ' ', text, flags=re.I)
-    # Remove all tags
-    text = re.sub(r'<[^>]+>', ' ', text)
-    # Decode HTML entities
-    text = html.unescape(text)
-    # Collapse whitespace
-    text = re.sub(r'\s+', ' ', text).strip()
-    return text[:2500]
-  except:
-    return ''
-
-# ── RSS ───────────────────────────────────────────────────────────
-
-def fetch_rss(query, max_items=8):
-  """Fetch Google News RSS for a query. Returns list of article dicts."""
-  url = ('https://news.google.com/rss/search?q='
-         + urllib.parse.quote(query + ' when:3d')
-         + '&hl=en-IN&gl=IN&ceid=IN:en')
-  body, _ = http_get(url)
-  if not body:
-    return []
-  items = re.findall(r'<item>(.*?)</item>', body, re.DOTALL)
-  results = []
-  for item in items[:max_items]:
-    def tag(t):
-      m = re.search(rf'<{t}>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?</{t}>', item, re.DOTALL)
-      return m.group(1).strip() if m else ''
-    title    = html.unescape(re.sub('<[^>]+>','', tag('title')))
-    desc     = html.unescape(re.sub('<[^>]+>','', tag('description')))
-    pub_date = tag('pubDate')
-    # Link: Google News uses <link> after CDATA or raw text, fallback to guid
-    link_m  = re.search(r'<link>([^<]+)</link>', item)
-    guid_m  = re.search(r'<guid[^>]*>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?</guid>', item, re.DOTALL)
-    link    = (link_m.group(1) if link_m else '') or (guid_m.group(1).strip() if guid_m else '')
-    if title and link:
-      results.append({
-        'title':    title.strip(),
-        'desc':     desc.strip(),
-        'url':      link.strip(),
-        'pub_date': pub_date.strip(),
-      })
-  return results
-
-def fetch_all_articles(queries, max_per_query=8):
-  """
-  Fetch RSS for all queries, deduplicate by URL and normalised title.
-  Returns deduplicated list.
-  """
-  seen_urls   = set()
-  seen_titles = set()
-  all_articles = []
-
-  for query in queries:
-    print(f'  RSS: {query[:50]}')
-    articles = fetch_rss(query, max_per_query)
-    for a in articles:
-      norm_title = re.sub(r'[^a-z0-9]', '', a['title'].lower())[:60]
-      url_key    = a['url'].split('?')[0].rstrip('/')
-      if url_key in seen_urls or norm_title in seen_titles:
-        continue
-      seen_urls.add(url_key)
-      seen_titles.add(norm_title)
-      all_articles.append(a)
-    time.sleep(0.3)  # be gentle with Google News
-
-  print(f'Total unique articles: {len(all_articles)}')
-  return all_articles
-
-# ── ARTICLE ENRICHMENT ────────────────────────────────────────────
-
-def enrich_article(article):
-  """
-  Fetch full article HTML.
-  Extracts: full_text, og_image, publisher.
-  Modifies article dict in place. Always returns article.
-  """
-  url = article['url']
-  body, final_url = http_get(url, timeout=10)
-
-  article['full_text'] = extract_article_text(body) if body else ''
-  article['og_image']  = extract_og_image(body, url) if body else None
-  article['publisher'] = extract_publisher(final_url or url)
-
-  if not article['full_text']:
-    print(f'  No article text (paywall/timeout): {url[:60]}')
-
-  return article
-
-# ── CLAUDE ────────────────────────────────────────────────────────
-
-def claude_call(prompt, max_tokens=700):
-  """Call Claude Haiku. Returns raw text or None."""
-  payload = json.dumps({
-    'model':      'claude-haiku-4-5-20251001',
-    'max_tokens': max_tokens,
-    'messages':   [{'role': 'user', 'content': prompt}]
-  }).encode()
-  req = urllib.request.Request(
-    'https://api.anthropic.com/v1/messages',
-    data=payload,
-    headers={
-      'x-api-key':         ANTHROPIC_KEY,
-      'anthropic-version': '2023-06-01',
-      'content-type':      'application/json',
-    }
-  )
-  try:
-    with urllib.request.urlopen(req, timeout=30) as r:
-      resp = json.loads(r.read())
-      return resp['content'][0]['text'].strip()
-  except urllib.error.HTTPError as e:
-    print(f'  Claude HTTP {e.code}: {e.read().decode()[:200]}')
-    return None
-  except Exception as e:
-    print(f'  Claude error: {e}')
-    return None
-
-def parse_claude_json(text):
-  """Strip markdown fences and extract JSON object from Claude response."""
-  if not text:
-    return None
-  text = re.sub(r'^```(?:json)?\s*', '', text.strip())
-  text = re.sub(r'\s*```$', '', text)
-  m = re.search(r'\{.*\}', text, re.DOTALL)
-  if not m:
-    return None
-  try:
-    return json.loads(m.group())
-  except json.JSONDecodeError as e:
-    print(f'  JSON parse error: {e} | text: {text[:200]}')
-    return None
-
-EXTRACT_PROMPT = """You are the editor of "100 Ways to Die in India" — a dark satire site that documents real, avoidable deaths caused by systemic negligence, government failure, and institutional rot in India.
-
-Analyse this news article carefully. Return ONLY a JSON object. No markdown. No backticks. No explanation.
-
-ELIGIBILITY — include ONLY if ALL of these are true:
-- Death(s) occurred in India
-- Death was avoidable — caused by negligence, corruption, infrastructure failure, government failure, or systemic rot
-- Not a natural death, celebrity death, war, terrorism, gang violence, or suicide (unless the suicide was caused by systemic failure e.g. NEET paper leak, farmer debt)
-
-SCORING — score 0 to 100:
-- 80–100: Multiple deaths, clear systemic failure, strong negligence angle, high public outrage value
-- 50–79: 1–2 deaths, clear negligence, documented failure
-- 20–49: Possible negligence, unclear, or very minor incident
-- 0–19: Not eligible
-
-If NOT eligible return: {"skip": true, "score": 0}
-
-If eligible return this JSON exactly:
-{
-  "skip": false,
-  "score": <0-100 integer>,
-  "date": "<human readable date e.g. '4 Jun 2025', use 'Unknown' if not clear>",
-  "incident_date": "<ISO date YYYY-MM-DD or null if unknown>",
-  "tag": "<one of: Fire Safety | Infrastructure | Road Safety | Gender Violence | Medical Negligence | Labour Safety | Stampede | Climate Negligence | Caste Violence | Food Safety | Custodial Death | Education Pressure | Systemic Rot | Gas & Industrial>",
-  "cat": "<one of: fire | road | women | student | infra | medical | labour | stampede | environment | system>",
-  "headline": "<stark 1-2 line headline taunting the system. NO html tags. Use plain text only.>",
-  "em_phrase": "<exact substring of headline that should appear in red — the most damning phrase>",
-  "body": "<2-3 sentences: location, what happened, what the systemic failure was, what useless response followed. Under 75 words. Factual and bitter.>",
-  "death_count": <integer number of confirmed deaths, 0 if unknown>,
-  "confidence": <0.0 to 1.0 float — how confident you are this is a real avoidable death>
-}
-
-ARTICLE TITLE: {title}
-PUBLISHED: {pub_date}
-SOURCE: {url}
-DESCRIPTION: {desc}
-ARTICLE TEXT: {full_text}"""
-
-def score_article(article):
-  """
-  Call Claude to score and extract one article.
-  Returns extracted dict with score, or None if skip/failure.
-  """
-  full_text = article.get('full_text', '') or ''
-  # Truncate to keep prompt size reasonable
-  full_text_trimmed = full_text[:1800] if full_text else '(not available — paywall or fetch failed)'
-
-  prompt = EXTRACT_PROMPT.format(
-    title     = article['title'],
-    pub_date  = article.get('pub_date', 'Unknown'),
-    url       = article['url'],
-    desc      = article.get('desc', ''),
-    full_text = full_text_trimmed,
-  )
-
-  raw = claude_call(prompt)
-  print(f'  Claude raw: {(raw or "")[:200]}')
-  result = parse_claude_json(raw)
-
-  if not result:
-    return None
-  if result.get('skip'):
-    print(f'  Skipped (score={result.get("score",0)})')
-    return None
-
-  # Validate required fields
-  required = ['date', 'tag', 'cat', 'headline', 'em_phrase', 'body', 'score']
-  missing  = [k for k in required if not result.get(k) and result.get(k) != 0]
-  if missing:
-    print(f'  Missing fields: {missing}')
-    return None
-
-  # Validate em_phrase is actually in headline
-  if result.get('em_phrase') and result['em_phrase'] not in result['headline']:
-    # Try case-insensitive match
-    hl_lower = result['headline'].lower()
-    em_lower = result['em_phrase'].lower()
-    if em_lower not in hl_lower:
-      print(f'  em_phrase not in headline — clearing em_phrase')
-      result['em_phrase'] = ''
-
-  # Validate cat value
-  valid_cats = {'fire','road','women','student','infra','medical','labour','stampede','environment','system'}
-  if result.get('cat') not in valid_cats:
-    print(f'  Invalid cat "{result.get("cat")}" — defaulting to system')
-    result['cat'] = 'system'
-
-  # Attach article metadata
-  result['source_url']  = article['url']
-  result['og_image']    = article.get('og_image')
-  result['publisher']   = article.get('publisher', 'Unknown')
-  result['published_at'] = None
-
-  # Parse published_at
-  pd = parse_pub_date(article.get('pub_date', ''))
-  if pd:
-    result['published_at'] = pd.strftime('%Y-%m-%d %H:%M:%S')
-
-  return result
-
-# ── SUPABASE OPERATIONS ───────────────────────────────────────────
-
-def get_existing_urls():
-  data = supabase_req('GET', 'deaths?select=source_url')
-  if not data:
-    return set()
-  return {row['source_url'] for row in data if row.get('source_url')}
-
-def get_next_id():
-  data = supabase_req('GET', 'deaths?select=id&order=id.desc&limit=1')
-  if not data:
-    return 1
-  return (data[0]['id'] + 1) if data else 1
-
-def get_max_rank():
-  data = supabase_req('GET', 'deaths?select=rank&order=rank.desc.nullslast&limit=1')
-  if not data or data[0].get('rank') is None:
-    return 0
-  return data[0]['rank']
-
-def clear_latest():
-  supabase_req('PATCH', 'deaths?is_latest=eq.true', payload={'is_latest': False})
-
-def build_row(case_data, next_id, rank):
-  """Build a clean Supabase row dict from Claude output."""
-  # Image: og:image from article, fallback to Unsplash by category
-  image_url = (
-    case_data.get('og_image')
-    or UNSPLASH_FALLBACK.get(case_data['cat'], UNSPLASH_FALLBACK['system'])
-  )
-  # Ensure Unsplash URLs have hotlink params
-  if 'unsplash.com' in image_url and 'auto=format' not in image_url:
-    image_url += ('&' if '?' in image_url else '?') + 'auto=format&fit=crop'
-
-  incident_date = case_data.get('incident_date')
-  # Validate ISO date format
-  if incident_date:
-    if not re.match(r'^\d{4}-\d{2}-\d{2}$', str(incident_date)):
-      incident_date = None
-
-  return {
-    'id':            next_id,
-    'date':          case_data.get('date', 'Unknown'),
-    'tag':           case_data['tag'],
-    'cat':           case_data['cat'],
-    'headline':      case_data['headline'],
-    'em_phrase':     case_data.get('em_phrase', ''),
-    'body':          case_data['body'],
-    'source_url':    case_data['source_url'],
-    'image_url':     image_url,
-    'publisher':     case_data.get('publisher', 'Unknown'),
-    'is_latest':     True,
-    'incident_date': incident_date,
-    'published_at':  case_data.get('published_at'),
-    'score':         int(case_data.get('score', 0)),
-    'rank':          rank,
-  }
-
-def insert_row(row):
-  result = supabase_req('POST', 'deaths', payload=row)
-  if result is None:
-    # Supabase returns None on success with Prefer: return=minimal
-    print(f'  Inserted case #{row["id"]}: [{row["tag"]}] {row["date"]} (score={row["score"]})')
-    return True
-  print(f'  Insert may have failed for #{row["id"]}')
-  return False
-
-def delete_all_rows():
-  """Delete all rows — used in refresh100 before rebuilding."""
-  result = supabase_req('DELETE', 'deaths?id=gte.0')
-  print('  Deleted all existing rows')
-
-def update_ranks(scored_results):
-  """Update rank column for all rows based on final ordering."""
-  for i, r in enumerate(scored_results):
-    supabase_req('PATCH',
-      f'deaths?id=eq.{r["db_id"]}',
-      payload={'rank': i + 1}
-    )
-
-# ── DAILY MODE ────────────────────────────────────────────────────
-
-def run_daily():
-  print('\n── DAILY MODE ──')
-
-  print('Fetching articles from all queries...')
-  all_articles = fetch_all_articles(QUERIES, max_per_query=6)
-
-  # Filter out already-known URLs
-  existing_urls = get_existing_urls()
-  norm_existing = {u.split('?')[0].rstrip('/') for u in existing_urls}
-  fresh = [a for a in all_articles
-           if a['url'].split('?')[0].rstrip('/') not in norm_existing]
-  print(f'Fresh articles after dedup: {len(fresh)}')
-
-  if not fresh:
-    print('No fresh articles today. Nothing to add.')
-    return
-
-  # Score articles — enriching and calling Claude one by one
-  # Stop as soon as we have a winner with score >= 60 (daily mode: speed over exhaustiveness)
-  best_case   = None
-  best_score  = -1
-
-  for article in fresh:
-    print(f'\nProcessing: {article["title"][:70]}')
-    enrich_article(article)
-    case = score_article(article)
-    if not case:
-      continue
-    s = int(case.get('score', 0))
-    print(f'  Score: {s}')
-    if s > best_score:
-      best_score  = s
-      best_case   = case
-    # If we find a high-confidence strong case, stop early
-    if best_score >= 75:
-      print(f'  High score {best_score} — stopping early')
-      break
-
-  if not best_case:
-    print('No eligible article found today.')
-    return
-
-  print(f'\nBest case: score={best_score}, tag={best_case["tag"]}, date={best_case["date"]}')
-
-  next_id = get_next_id()
-  next_rank = get_max_rank() + 1
-
-  clear_latest()
-  row = build_row(best_case, next_id, next_rank)
-  insert_row(row)
-  print(f'\nDone. Added case #{next_id}.')
-
-# ── REFRESH100 MODE ───────────────────────────────────────────────
-
-def run_refresh100():
-  print('\n── REFRESH100 MODE ──')
-  print('This will replace ALL rows. Fetching 1000+ articles...')
-
-  # Fetch more articles per query in refresh mode
-  all_articles = fetch_all_articles(QUERIES, max_per_query=15)
-
-  if not all_articles:
-    print('No articles found. Aborting.')
-    return
-
-  print(f'\nScoring {len(all_articles)} articles with Claude...')
-  scored = []
-  for i, article in enumerate(all_articles):
-    print(f'\n[{i+1}/{len(all_articles)}] {article["title"][:70]}')
-    enrich_article(article)
-    case = score_article(article)
-    if case and int(case.get('score', 0)) >= 40:
-      scored.append(case)
-      print(f'  Accepted — score={case["score"]}')
-    time.sleep(0.2)  # rate limiting
-
-  print(f'\nEligible cases: {len(scored)}')
-  if not scored:
-    print('No eligible cases found. Aborting — not deleting existing data.')
-    return
-
-  # Sort by score descending, take top 100
-  scored.sort(key=lambda x: int(x.get('score', 0)), reverse=True)
-  top100 = scored[:100]
-
-  print(f'Top {len(top100)} cases selected. Rebuilding database...')
-
-  # Delete all existing rows
-  delete_all_rows()
-  time.sleep(1)
-
-  # Insert top cases ranked by score
-  # Mark the highest scoring one as latest
-  for rank_idx, case in enumerate(top100):
-    case_id   = rank_idx + 1
-    is_top    = (rank_idx == 0)
-    row       = build_row(case, case_id, rank_idx + 1)
-    row['is_latest'] = is_top
-    row['id']        = case_id
-    row['rank']      = rank_idx + 1
-    insert_row(row)
-    time.sleep(0.1)  # avoid hammering Supabase
-
-  print(f'\nRefresh100 complete. {len(top100)} cases inserted.')
-
-# ── ENTRYPOINT ────────────────────────────────────────────────────
-
-if MODE == 'refresh100':
-  run_refresh100()
-else:
-  run_daily()
-
-EOF
+          import urllib.request, urllib.parse, urllib.error
+          import json, os, datetime, re, time, html
+          from email.utils import parsedate_to_datetime
+
+          # ── CONFIG ────────────────────────────────────────────────────────
+          ANTHROPIC_KEY = os.environ['ANTHROPIC_API_KEY']
+          BASE_URL      = os.environ['SUPABASE_URL'].rstrip('/')
+          SUPABASE_KEY  = os.environ['SUPABASE_KEY']
+          MODE          = os.environ.get('MODE', 'daily').strip().lower()
+
+          print(f'Mode: {MODE}')
+          print(f'Supabase: {BASE_URL[:30]}...')
+
+          QUERIES = [
+            'India death fire accident negligence',
+            'India stampede crushed death crowd',
+            'India road accident bridge collapse death',
+            'India rape murder woman killed negligence',
+            'India factory explosion worker killed safety',
+            'India flood drowning drainage failure death',
+            'India hospital death negligence oxygen shortage',
+            'India sewer death manual scavenging worker',
+            'India child death borewell school collapse',
+            'India pothole accident death road',
+            'India train derailment accident death',
+            'India building collapse death',
+            'India farmer suicide debt crop failure',
+            'India heatwave death state failure',
+            'India custodial death police brutality',
+            'India electrocution death exposed wire',
+            'India gas pipeline explosion death',
+            'India flyover collapse construction death',
+            'India food poisoning death school hospital',
+            'India boat capsize river drowning',
+          ]
+
+          UNSPLASH_FALLBACK = {
+            'fire':        'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1600&q=80&auto=format&fit=crop',
+            'road':        'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=1600&q=80&auto=format&fit=crop',
+            'women':       'https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?w=1600&q=80&auto=format&fit=crop',
+            'student':     'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1600&q=80&auto=format&fit=crop',
+            'infra':       'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=1600&q=80&auto=format&fit=crop',
+            'medical':     'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=1600&q=80&auto=format&fit=crop',
+            'labour':      'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=1600&q=80&auto=format&fit=crop',
+            'stampede':    'https://images.unsplash.com/photo-1533105079780-92b9be482077?w=1600&q=80&auto=format&fit=crop',
+            'system':      'https://images.unsplash.com/photo-1469398715555-76331a6e7b53?w=1600&q=80&auto=format&fit=crop',
+            'environment': 'https://images.unsplash.com/photo-1547683905-f686c993aae5?w=1600&q=80&auto=format&fit=crop',
+          }
+
+          # ── HELPERS ───────────────────────────────────────────────────────
+
+          def http_get(url, headers=None, timeout=12):
+            """Simple GET, returns (body_str, final_url) or (None, None) on failure."""
+            req = urllib.request.Request(url, headers={
+              'User-Agent': 'Mozilla/5.0 (compatible; NewsBot/1.0)',
+              **(headers or {})
+            })
+            try:
+              with urllib.request.urlopen(req, timeout=timeout) as r:
+                charset = 'utf-8'
+                ct = r.headers.get('Content-Type', '')
+                m = re.search(r'charset=([^\s;]+)', ct)
+                if m:
+                  charset = m.group(1).replace('"','').strip()
+                return r.read().decode(charset, errors='replace'), r.url
+            except Exception as e:
+              print(f'  GET failed {url[:60]}: {e}')
+              return None, None
+
+          def supabase_req(method, path, payload=None, params=None):
+            """Make a Supabase REST API call. Returns parsed JSON or None."""
+            url = BASE_URL + '/rest/v1/' + path
+            if params:
+              url += ('&' if '?' in url else '?') + urllib.parse.urlencode(params)
+            data = json.dumps(payload).encode() if payload is not None else None
+            req = urllib.request.Request(url, data=data, method=method, headers={
+              'apikey':        SUPABASE_KEY,
+              'Authorization': 'Bearer ' + SUPABASE_KEY,
+              'Content-Type':  'application/json',
+              'Prefer':        'return=minimal',
+            })
+            try:
+              with urllib.request.urlopen(req, timeout=20) as r:
+                body = r.read()
+                return json.loads(body) if body else None
+            except urllib.error.HTTPError as e:
+              body = e.read().decode(errors='replace')
+              print(f'  Supabase {method} {path[:50]} → {e.code}: {body[:200]}')
+              return None
+
+          def extract_publisher(url):
+            """Extract clean publisher name from URL domain."""
+            try:
+              domain = urllib.parse.urlparse(url).netloc.lower()
+              domain = re.sub(r'^www\.', '', domain)
+              KNOWN = {
+                'thehindu.com':         'The Hindu',
+                'ndtv.com':             'NDTV',
+                'indianexpress.com':    'Indian Express',
+                'timesofindia.indiatimes.com': 'Times of India',
+                'timesofindia.com':     'Times of India',
+                'bbc.com':              'BBC',
+                'bbc.co.uk':            'BBC',
+                'reuters.com':          'Reuters',
+                'theguardian.com':      'The Guardian',
+                'hindustantimes.com':   'Hindustan Times',
+                'telegraphindia.com':   'The Telegraph',
+                'deccanherald.com':     'Deccan Herald',
+                'theprint.in':          'The Print',
+                'thewire.in':           'The Wire',
+                'scroll.in':            'Scroll',
+                'news18.com':           'News18',
+                'aajtak.in':            'Aaj Tak',
+                'abplive.com':          'ABP Live',
+                'zeenews.india.com':    'Zee News',
+                'indiatoday.in':        'India Today',
+                'tribuneindia.com':     'Tribune India',
+                'business-standard.com':'Business Standard',
+                'livemint.com':         'Mint',
+                'financialexpress.com': 'Financial Express',
+                'downtoearth.org.in':   'Down to Earth',
+                'en.wikipedia.org':     'Wikipedia',
+                'thewire.in':           'The Wire',
+              }
+              return KNOWN.get(domain, domain.split('.')[0].title())
+            except:
+              return 'Unknown'
+
+          def parse_pub_date(date_str):
+            """Parse RSS pubDate to datetime. Returns None on failure."""
+            if not date_str:
+              return None
+            try:
+              return parsedate_to_datetime(date_str.strip())
+            except:
+              pass
+            try:
+              for fmt in ('%a, %d %b %Y %H:%M:%S %z', '%d %b %Y %H:%M:%S %z'):
+                try:
+                  return datetime.datetime.strptime(date_str.strip(), fmt)
+                except:
+                  pass
+            except:
+              pass
+            return None
+
+          def extract_og_image(html_text, base_url):
+            """
+            Extract image URL from article HTML.
+            Priority: og:image → twitter:image → first large img src → None
+            """
+            if not html_text:
+              return None
+            # og:image
+            m = re.search(r'<meta[^>]+property=["\']og:image["\'][^>]+content=["\']([^"\']+)["\']', html_text, re.I)
+            if not m:
+              m = re.search(r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:image["\']', html_text, re.I)
+            if m:
+              url = m.group(1).strip()
+              if url.startswith('http'):
+                return url
+            # twitter:image
+            m = re.search(r'<meta[^>]+name=["\']twitter:image["\'][^>]+content=["\']([^"\']+)["\']', html_text, re.I)
+            if not m:
+              m = re.search(r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+name=["\']twitter:image["\']', html_text, re.I)
+            if m:
+              url = m.group(1).strip()
+              if url.startswith('http'):
+                return url
+            # schema.org
+            m = re.search(r'"image"\s*:\s*["\']?(https://[^"\'<\s,\]]+)', html_text)
+            if m:
+              return m.group(1).strip()
+            return None
+
+          def extract_article_text(html_text):
+            """
+            Strip HTML and return clean plain text (first 2000 chars).
+            Falls back gracefully on any error.
+            """
+            if not html_text:
+              return ''
+            try:
+              # Remove script/style blocks
+              text = re.sub(r'<script[\s\S]*?</script>', ' ', html_text, flags=re.I)
+              text = re.sub(r'<style[\s\S]*?</style>', ' ', text, flags=re.I)
+              # Remove all tags
+              text = re.sub(r'<[^>]+>', ' ', text)
+              # Decode HTML entities
+              text = html.unescape(text)
+              # Collapse whitespace
+              text = re.sub(r'\s+', ' ', text).strip()
+              return text[:2500]
+            except:
+              return ''
+
+          # ── RSS ───────────────────────────────────────────────────────────
+
+          def fetch_rss(query, max_items=8):
+            """Fetch Google News RSS for a query. Returns list of article dicts."""
+            url = ('https://news.google.com/rss/search?q='
+                   + urllib.parse.quote(query + ' when:3d')
+                   + '&hl=en-IN&gl=IN&ceid=IN:en')
+            body, _ = http_get(url)
+            if not body:
+              return []
+            items = re.findall(r'<item>(.*?)</item>', body, re.DOTALL)
+            results = []
+            for item in items[:max_items]:
+              def tag(t):
+                m = re.search(rf'<{t}>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?</{t}>', item, re.DOTALL)
+                return m.group(1).strip() if m else ''
+              title    = html.unescape(re.sub('<[^>]+>','', tag('title')))
+              desc     = html.unescape(re.sub('<[^>]+>','', tag('description')))
+              pub_date = tag('pubDate')
+              # Link: Google News uses <link> after CDATA or raw text, fallback to guid
+              link_m  = re.search(r'<link>([^<]+)</link>', item)
+              guid_m  = re.search(r'<guid[^>]*>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?</guid>', item, re.DOTALL)
+              link    = (link_m.group(1) if link_m else '') or (guid_m.group(1).strip() if guid_m else '')
+              if title and link:
+                results.append({
+                  'title':    title.strip(),
+                  'desc':     desc.strip(),
+                  'url':      link.strip(),
+                  'pub_date': pub_date.strip(),
+                })
+            return results
+
+          def fetch_all_articles(queries, max_per_query=8):
+            """
+            Fetch RSS for all queries, deduplicate by URL and normalised title.
+            Returns deduplicated list.
+            """
+            seen_urls   = set()
+            seen_titles = set()
+            all_articles = []
+
+            for query in queries:
+              print(f'  RSS: {query[:50]}')
+              articles = fetch_rss(query, max_per_query)
+              for a in articles:
+                norm_title = re.sub(r'[^a-z0-9]', '', a['title'].lower())[:60]
+                url_key    = a['url'].split('?')[0].rstrip('/')
+                if url_key in seen_urls or norm_title in seen_titles:
+                  continue
+                seen_urls.add(url_key)
+                seen_titles.add(norm_title)
+                all_articles.append(a)
+              time.sleep(0.3)  # be gentle with Google News
+
+            print(f'Total unique articles: {len(all_articles)}')
+            return all_articles
+
+          # ── ARTICLE ENRICHMENT ────────────────────────────────────────────
+
+          def enrich_article(article):
+            """
+            Fetch full article HTML.
+            Extracts: full_text, og_image, publisher.
+            Modifies article dict in place. Always returns article.
+            """
+            url = article['url']
+            body, final_url = http_get(url, timeout=10)
+
+            article['full_text'] = extract_article_text(body) if body else ''
+            article['og_image']  = extract_og_image(body, url) if body else None
+            article['publisher'] = extract_publisher(final_url or url)
+
+            if not article['full_text']:
+              print(f'  No article text (paywall/timeout): {url[:60]}')
+
+            return article
+
+          # ── CLAUDE ────────────────────────────────────────────────────────
+
+          def claude_call(prompt, max_tokens=700):
+            """Call Claude Haiku. Returns raw text or None."""
+            payload = json.dumps({
+              'model':      'claude-haiku-4-5-20251001',
+              'max_tokens': max_tokens,
+              'messages':   [{'role': 'user', 'content': prompt}]
+            }).encode()
+            req = urllib.request.Request(
+              'https://api.anthropic.com/v1/messages',
+              data=payload,
+              headers={
+                'x-api-key':         ANTHROPIC_KEY,
+                'anthropic-version': '2023-06-01',
+                'content-type':      'application/json',
+              }
+            )
+            try:
+              with urllib.request.urlopen(req, timeout=30) as r:
+                resp = json.loads(r.read())
+                return resp['content'][0]['text'].strip()
+            except urllib.error.HTTPError as e:
+              print(f'  Claude HTTP {e.code}: {e.read().decode()[:200]}')
+              return None
+            except Exception as e:
+              print(f'  Claude error: {e}')
+              return None
+
+          def parse_claude_json(text):
+            """Strip markdown fences and extract JSON object from Claude response."""
+            if not text:
+              return None
+            text = re.sub(r'^```(?:json)?\s*', '', text.strip())
+            text = re.sub(r'\s*```$', '', text)
+            m = re.search(r'\{.*\}', text, re.DOTALL)
+            if not m:
+              return None
+            try:
+              return json.loads(m.group())
+            except json.JSONDecodeError as e:
+              print(f'  JSON parse error: {e} | text: {text[:200]}')
+              return None
+
+          EXTRACT_PROMPT = """You are the editor of "100 Ways to Die in India" — a dark satire site that documents real, avoidable deaths caused by systemic negligence, government failure, and institutional rot in India.
+
+          Analyse this news article carefully. Return ONLY a JSON object. No markdown. No backticks. No explanation.
+
+          ELIGIBILITY — include ONLY if ALL of these are true:
+          - Death(s) occurred in India
+          - Death was avoidable — caused by negligence, corruption, infrastructure failure, government failure, or systemic rot
+          - Not a natural death, celebrity death, war, terrorism, gang violence, or suicide (unless the suicide was caused by systemic failure e.g. NEET paper leak, farmer debt)
+
+          SCORING — score 0 to 100:
+          - 80–100: Multiple deaths, clear systemic failure, strong negligence angle, high public outrage value
+          - 50–79: 1–2 deaths, clear negligence, documented failure
+          - 20–49: Possible negligence, unclear, or very minor incident
+          - 0–19: Not eligible
+
+          If NOT eligible return: {"skip": true, "score": 0}
+
+          If eligible return this JSON exactly:
+          {
+            "skip": false,
+            "score": <0-100 integer>,
+            "date": "<human readable date e.g. '4 Jun 2025', use 'Unknown' if not clear>",
+            "incident_date": "<ISO date YYYY-MM-DD or null if unknown>",
+            "tag": "<one of: Fire Safety | Infrastructure | Road Safety | Gender Violence | Medical Negligence | Labour Safety | Stampede | Climate Negligence | Caste Violence | Food Safety | Custodial Death | Education Pressure | Systemic Rot | Gas & Industrial>",
+            "cat": "<one of: fire | road | women | student | infra | medical | labour | stampede | environment | system>",
+            "headline": "<stark 1-2 line headline taunting the system. NO html tags. Use plain text only.>",
+            "em_phrase": "<exact substring of headline that should appear in red — the most damning phrase>",
+            "body": "<2-3 sentences: location, what happened, what the systemic failure was, what useless response followed. Under 75 words. Factual and bitter.>",
+            "death_count": <integer number of confirmed deaths, 0 if unknown>,
+            "confidence": <0.0 to 1.0 float — how confident you are this is a real avoidable death>
+          }
+
+          ARTICLE TITLE: {title}
+          PUBLISHED: {pub_date}
+          SOURCE: {url}
+          DESCRIPTION: {desc}
+          ARTICLE TEXT: {full_text}"""
+
+          def score_article(article):
+            """
+            Call Claude to score and extract one article.
+            Returns extracted dict with score, or None if skip/failure.
+            """
+            full_text = article.get('full_text', '') or ''
+            # Truncate to keep prompt size reasonable
+            full_text_trimmed = full_text[:1800] if full_text else '(not available — paywall or fetch failed)'
+
+            prompt = EXTRACT_PROMPT.format(
+              title     = article['title'],
+              pub_date  = article.get('pub_date', 'Unknown'),
+              url       = article['url'],
+              desc      = article.get('desc', ''),
+              full_text = full_text_trimmed,
+            )
+
+            raw = claude_call(prompt)
+            print(f'  Claude raw: {(raw or "")[:200]}')
+            result = parse_claude_json(raw)
+
+            if not result:
+              return None
+            if result.get('skip'):
+              print(f'  Skipped (score={result.get("score",0)})')
+              return None
+
+            # Validate required fields
+            required = ['date', 'tag', 'cat', 'headline', 'em_phrase', 'body', 'score']
+            missing  = [k for k in required if not result.get(k) and result.get(k) != 0]
+            if missing:
+              print(f'  Missing fields: {missing}')
+              return None
+
+            # Validate em_phrase is actually in headline
+            if result.get('em_phrase') and result['em_phrase'] not in result['headline']:
+              # Try case-insensitive match
+              hl_lower = result['headline'].lower()
+              em_lower = result['em_phrase'].lower()
+              if em_lower not in hl_lower:
+                print(f'  em_phrase not in headline — clearing em_phrase')
+                result['em_phrase'] = ''
+
+            # Validate cat value
+            valid_cats = {'fire','road','women','student','infra','medical','labour','stampede','environment','system'}
+            if result.get('cat') not in valid_cats:
+              print(f'  Invalid cat "{result.get("cat")}" — defaulting to system')
+              result['cat'] = 'system'
+
+            # Attach article metadata
+            result['source_url']  = article['url']
+            result['og_image']    = article.get('og_image')
+            result['publisher']   = article.get('publisher', 'Unknown')
+            result['published_at'] = None
+
+            # Parse published_at
+            pd = parse_pub_date(article.get('pub_date', ''))
+            if pd:
+              result['published_at'] = pd.strftime('%Y-%m-%d %H:%M:%S')
+
+            return result
+
+          # ── SUPABASE OPERATIONS ───────────────────────────────────────────
+
+          def get_existing_urls():
+            data = supabase_req('GET', 'deaths?select=source_url')
+            if not data:
+              return set()
+            return {row['source_url'] for row in data if row.get('source_url')}
+
+          def get_next_id():
+            data = supabase_req('GET', 'deaths?select=id&order=id.desc&limit=1')
+            if not data:
+              return 1
+            return (data[0]['id'] + 1) if data else 1
+
+          def get_max_rank():
+            data = supabase_req('GET', 'deaths?select=rank&order=rank.desc.nullslast&limit=1')
+            if not data or data[0].get('rank') is None:
+              return 0
+            return data[0]['rank']
+
+          def clear_latest():
+            supabase_req('PATCH', 'deaths?is_latest=eq.true', payload={'is_latest': False})
+
+          def build_row(case_data, next_id, rank):
+            """Build a clean Supabase row dict from Claude output."""
+            # Image: og:image from article, fallback to Unsplash by category
+            image_url = (
+              case_data.get('og_image')
+              or UNSPLASH_FALLBACK.get(case_data['cat'], UNSPLASH_FALLBACK['system'])
+            )
+            # Ensure Unsplash URLs have hotlink params
+            if 'unsplash.com' in image_url and 'auto=format' not in image_url:
+              image_url += ('&' if '?' in image_url else '?') + 'auto=format&fit=crop'
+
+            incident_date = case_data.get('incident_date')
+            # Validate ISO date format
+            if incident_date:
+              if not re.match(r'^\d{4}-\d{2}-\d{2}$', str(incident_date)):
+                incident_date = None
+
+            return {
+              'id':            next_id,
+              'date':          case_data.get('date', 'Unknown'),
+              'tag':           case_data['tag'],
+              'cat':           case_data['cat'],
+              'headline':      case_data['headline'],
+              'em_phrase':     case_data.get('em_phrase', ''),
+              'body':          case_data['body'],
+              'source_url':    case_data['source_url'],
+              'image_url':     image_url,
+              'publisher':     case_data.get('publisher', 'Unknown'),
+              'is_latest':     True,
+              'incident_date': incident_date,
+              'published_at':  case_data.get('published_at'),
+              'score':         int(case_data.get('score', 0)),
+              'rank':          rank,
+            }
+
+          def insert_row(row):
+            result = supabase_req('POST', 'deaths', payload=row)
+            if result is None:
+              # Supabase returns None on success with Prefer: return=minimal
+              print(f'  Inserted case #{row["id"]}: [{row["tag"]}] {row["date"]} (score={row["score"]})')
+              return True
+            print(f'  Insert may have failed for #{row["id"]}')
+            return False
+
+          def delete_all_rows():
+            """Delete all rows — used in refresh100 before rebuilding."""
+            result = supabase_req('DELETE', 'deaths?id=gte.0')
+            print('  Deleted all existing rows')
+
+          def update_ranks(scored_results):
+            """Update rank column for all rows based on final ordering."""
+            for i, r in enumerate(scored_results):
+              supabase_req('PATCH',
+                f'deaths?id=eq.{r["db_id"]}',
+                payload={'rank': i + 1}
+              )
+
+          # ── DAILY MODE ────────────────────────────────────────────────────
+
+          def run_daily():
+            print('\n── DAILY MODE ──')
+
+            print('Fetching articles from all queries...')
+            all_articles = fetch_all_articles(QUERIES, max_per_query=6)
+
+            # Filter out already-known URLs
+            existing_urls = get_existing_urls()
+            norm_existing = {u.split('?')[0].rstrip('/') for u in existing_urls}
+            fresh = [a for a in all_articles
+                     if a['url'].split('?')[0].rstrip('/') not in norm_existing]
+            print(f'Fresh articles after dedup: {len(fresh)}')
+
+            if not fresh:
+              print('No fresh articles today. Nothing to add.')
+              return
+
+            # Score articles — enriching and calling Claude one by one
+            # Stop as soon as we have a winner with score >= 60 (daily mode: speed over exhaustiveness)
+            best_case   = None
+            best_score  = -1
+
+            for article in fresh:
+              print(f'\nProcessing: {article["title"][:70]}')
+              enrich_article(article)
+              case = score_article(article)
+              if not case:
+                continue
+              s = int(case.get('score', 0))
+              print(f'  Score: {s}')
+              if s > best_score:
+                best_score  = s
+                best_case   = case
+              # If we find a high-confidence strong case, stop early
+              if best_score >= 75:
+                print(f'  High score {best_score} — stopping early')
+                break
+
+            if not best_case:
+              print('No eligible article found today.')
+              return
+
+            print(f'\nBest case: score={best_score}, tag={best_case["tag"]}, date={best_case["date"]}')
+
+            next_id = get_next_id()
+            next_rank = get_max_rank() + 1
+
+            clear_latest()
+            row = build_row(best_case, next_id, next_rank)
+            insert_row(row)
+            print(f'\nDone. Added case #{next_id}.')
+
+          # ── REFRESH100 MODE ───────────────────────────────────────────────
+
+          def run_refresh100():
+            print('\n── REFRESH100 MODE ──')
+            print('This will replace ALL rows. Fetching 1000+ articles...')
+
+            # Fetch more articles per query in refresh mode
+            all_articles = fetch_all_articles(QUERIES, max_per_query=15)
+
+            if not all_articles:
+              print('No articles found. Aborting.')
+              return
+
+            print(f'\nScoring {len(all_articles)} articles with Claude...')
+            scored = []
+            for i, article in enumerate(all_articles):
+              print(f'\n[{i+1}/{len(all_articles)}] {article["title"][:70]}')
+              enrich_article(article)
+              case = score_article(article)
+              if case and int(case.get('score', 0)) >= 40:
+                scored.append(case)
+                print(f'  Accepted — score={case["score"]}')
+              time.sleep(0.2)  # rate limiting
+
+            print(f'\nEligible cases: {len(scored)}')
+            if not scored:
+              print('No eligible cases found. Aborting — not deleting existing data.')
+              return
+
+            # Sort by score descending, take top 100
+            scored.sort(key=lambda x: int(x.get('score', 0)), reverse=True)
+            top100 = scored[:100]
+
+            print(f'Top {len(top100)} cases selected. Rebuilding database...')
+
+            # Delete all existing rows
+            delete_all_rows()
+            time.sleep(1)
+
+            # Insert top cases ranked by score
+            # Mark the highest scoring one as latest
+            for rank_idx, case in enumerate(top100):
+              case_id   = rank_idx + 1
+              is_top    = (rank_idx == 0)
+              row       = build_row(case, case_id, rank_idx + 1)
+              row['is_latest'] = is_top
+              row['id']        = case_id
+              row['rank']      = rank_idx + 1
+              insert_row(row)
+              time.sleep(0.1)  # avoid hammering Supabase
+
+            print(f'\nRefresh100 complete. {len(top100)} cases inserted.')
+
+          # ── ENTRYPOINT ────────────────────────────────────────────────────
+
+          if MODE == 'refresh100':
+            run_refresh100()
+          else:
+            run_daily()
+
+          EOF
