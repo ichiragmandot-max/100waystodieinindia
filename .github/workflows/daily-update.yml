@@ -380,12 +380,7 @@ jobs:
           ARTICLE TEXT: {full_text}"""
 
           def score_article(article):
-            """
-            Call Claude to score and extract one article.
-            Returns extracted dict with score, or None if skip/failure.
-            """
             full_text = article.get('full_text', '') or ''
-            # Truncate to keep prompt size reasonable
             full_text_trimmed = full_text[:1800] if full_text else '(not available — paywall or fetch failed)'
 
             prompt = EXTRACT_PROMPT.format(
@@ -401,13 +396,17 @@ jobs:
             result = parse_claude_json(raw)
 
             if not result:
+              print('  No JSON parsed from Claude response')
               return None
 
-            # Normalise keys — strip stray quotes Claude occasionally wraps around them
+            # Normalise all keys — strip any stray quotes Claude wraps around them
+            # e.g. '"skip"' -> 'skip', "'date'" -> 'date'
             result = {k.strip().strip('"').strip("'"): v for k, v in result.items()}
 
             if result.get('skip'):
+              print(f'  Skipped by Claude (score={result.get("score", 0)})')
               return None
+
             # Validate required fields
             required = ['date', 'tag', 'cat', 'headline', 'em_phrase', 'body', 'score']
             missing  = [k for k in required if not result.get(k) and result.get(k) != 0]
@@ -415,13 +414,12 @@ jobs:
               print(f'  Missing fields: {missing}')
               return None
 
-            # Validate em_phrase is actually in headline
+            # Validate em_phrase is actually a substring of headline
             if result.get('em_phrase') and result['em_phrase'] not in result['headline']:
-              # Try case-insensitive match
               hl_lower = result['headline'].lower()
               em_lower = result['em_phrase'].lower()
               if em_lower not in hl_lower:
-                print(f'  em_phrase not in headline — clearing em_phrase')
+                print(f'  em_phrase not in headline — clearing')
                 result['em_phrase'] = ''
 
             # Validate cat value
@@ -431,12 +429,11 @@ jobs:
               result['cat'] = 'system'
 
             # Attach article metadata
-            result['source_url']  = article['url']
-            result['og_image']    = article.get('og_image')
-            result['publisher']   = article.get('publisher', 'Unknown')
+            result['source_url']   = article['url']
+            result['og_image']     = article.get('og_image')
+            result['publisher']    = article.get('publisher', 'Unknown')
             result['published_at'] = None
 
-            # Parse published_at
             pd = parse_pub_date(article.get('pub_date', ''))
             if pd:
               result['published_at'] = pd.strftime('%Y-%m-%d %H:%M:%S')
