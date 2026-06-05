@@ -22,8 +22,9 @@ jobs:
           ANTHROPIC_KEY = os.environ['ANTHROPIC_API_KEY']
           SUPABASE_URL  = os.environ['SUPABASE_URL']
           SUPABASE_KEY  = os.environ['SUPABASE_KEY']  # service_role key — safe here, never in HTML
-          print(f'Key length: {len(SUPABASE_KEY)}, starts: {SUPABASE_KEY[:12]}')
-
+          print(f'URL: {SUPABASE_URL}')
+          print(f'Key length: {len(SUPABASE_KEY)}')
+          
           QUERIES = [
             'India death fire accident negligence',
             'India stampede crushed death crowd',
