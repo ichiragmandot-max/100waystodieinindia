@@ -227,7 +227,7 @@ body {
 .card-bg {
   position:absolute; inset:0;
   background-size:cover; background-position:center center;
-  filter: brightness(0.27) contrast(1.3) saturate(0.35) sepia(0.15);
+  filter: brightness(0.45) contrast(1.2) saturate(0.5) sepia(0.1);
   transform: scale(1.06); transition: transform 9s ease;
 }
 .card.active .card-bg { transform: scale(1.0); }
@@ -315,11 +315,11 @@ body {
 .source-btn {
   font-family:'DM Mono',monospace;
   font-size: clamp(8px,1.6vw,10px); letter-spacing:2px; text-transform:uppercase;
-  color:rgba(232,221,208,0.25); text-decoration:none;
-  border-bottom:1px solid rgba(232,221,208,0.1); padding-bottom:2px;
+  color:var(--blood); text-decoration:none;
+  border-bottom:1px solid rgba(192,24,12,0.4); padding-bottom:2px;
   transition:color 0.2s, border-color 0.2s;
 }
-.source-btn:hover, .source-btn:focus { color:var(--blood); border-color:var(--blood); }
+.source-btn:hover, .source-btn:focus { color:var(--bone); border-color:var(--bone); }
 .count-pill {
   font-family:'DM Mono',monospace;
   font-size: clamp(8px,1.6vw,9px); letter-spacing:1px;
@@ -442,10 +442,10 @@ body {
         <span class="word" style="--i:1"> boat</span>
         <span class="word" style="--i:2"> can</span>
         <span class="word" style="--i:3"> <span class="red">capsize</span></span>
-        <span class="word" style="--i:4"> because</span>
+        <span class="word" style="--i:4"> and</span>
         <span class="word" style="--i:5"> there</span>
-        <span class="word" style="--i:6"> were</span>
-        <span class="word" style="--i:7"> no</span>
+        <span class="word" style="--i:6"> wont</span>
+        <span class="word" style="--i:7"> be</span>
         <span class="word" style="--i:8"> life</span>
         <span class="word" style="--i:9"> jackets.</span>
       </div>
@@ -509,8 +509,7 @@ body {
         <span class="word" style="--i:5"> with</span>
         <span class="word" style="--i:6"> no</span>
         <span class="word" style="--i:7"> equipment,</span>
-        <span class="word" style="--i:8"> <span class="red">choke</span>,</span>
-        <span class="word" style="--i:9"> die —</span>
+        <span class="word" style="--i:8"> <span class="red">choke & die</span>,</span>
       </div>
     </div>
 
@@ -528,9 +527,9 @@ body {
 
     <div class="beat" id="beat-9">
       <div class="beat-text" style="font-size:clamp(44px,11vw,80px); letter-spacing:-2px; line-height:1.05;">
-        <span class="word" style="--i:0"><span class="red">No</span></span>
-        <span class="word" style="--i:1"> <span class="red">one</span></span>
-        <span class="word" style="--i:2"> <span class="red">cares.</span></span>
+        <span class="word" style="--i:0"><span class="red">Value</span></span>
+        <span class="word" style="--i:1"> <span class="red">of life</span></span>
+        <span class="word" style="--i:2"> <span class="red">in this country = 0</span></span>
       </div>
     </div>
 
