@@ -1,0 +1,233 @@
+name: Daily Death Update
+
+on:
+  schedule:
+    - cron: '30 17 * * *'  # 11 PM IST = 5:30 PM UTC
+  workflow_dispatch:         # allows manual trigger from GitHub UI
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Fetch news and add case
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          python3 << 'EOF'
+          import urllib.request, urllib.parse, json, os, datetime, re
+
+          ANTHROPIC_KEY = os.environ['ANTHROPIC_API_KEY']
+          SUPABASE_URL  = os.environ['SUPABASE_URL']
+          SUPABASE_KEY  = os.environ['SUPABASE_KEY']  # service_role key — safe here, never in HTML
+
+          QUERIES = [
+            'India death fire accident negligence',
+            'India stampede crushed death crowd',
+            'India road accident bridge collapse death',
+            'India rape murder woman killed',
+            'India factory explosion worker killed',
+            'India flood drowning drainage failure',
+            'India hospital death negligence oxygen',
+            'India sewer death manual scavenging',
+            'India child death borewell school collapse',
+            'India pothole accident death',
+            'India train accident derailment death',
+            'India building collapse death',
+            'India farmer suicide debt crop failure',
+            'India heatwave death state failure',
+            'India custodial death police',
+          ]
+
+          UNSPLASH = {
+            'fire': 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1600&q=80&auto=format&fit=crop',
+            'road': 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=1600&q=80&auto=format&fit=crop',
+            'women': 'https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?w=1600&q=80&auto=format&fit=crop',
+            'student': 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1600&q=80&auto=format&fit=crop',
+            'infra': 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=1600&q=80&auto=format&fit=crop',
+            'medical': 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=1600&q=80&auto=format&fit=crop',
+            'labour': 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=1600&q=80&auto=format&fit=crop',
+            'stampede': 'https://images.unsplash.com/photo-1533105079780-92b9be482077?w=1600&q=80&auto=format&fit=crop',
+            'system': 'https://images.unsplash.com/photo-1469398715555-76331a6e7b53?w=1600&q=80&auto=format&fit=crop',
+            'environment': 'https://images.unsplash.com/photo-1547683905-f686c993aae5?w=1600&q=80&auto=format&fit=crop',
+          }
+
+          def fetch_rss(query):
+            url = 'https://news.google.com/rss/search?q=' + urllib.parse.quote(query + ' when:2d') + '&hl=en-IN&gl=IN&ceid=IN:en'
+            try:
+              req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+              with urllib.request.urlopen(req, timeout=10) as r:
+                xml = r.read().decode('utf-8')
+              items = re.findall(r'<item>(.*?)</item>', xml, re.DOTALL)
+              results = []
+              for item in items[:6]:
+                title = re.search(r'<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?</title>', item)
+                desc  = re.search(r'<description>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?</description>', item)
+                link  = re.search(r'<link>([^<]+)</link>', item)
+                guid  = re.search(r'<guid[^>]*>([^<]+)</guid>', item)
+                url2  = (link.group(1) if link else None) or (guid.group(1) if guid else '')
+                results.append({
+                  'title': title.group(1).strip() if title else '',
+                  'desc':  re.sub('<[^>]+>', '', desc.group(1)).strip() if desc else '',
+                  'url':   url2.strip()
+                })
+              return [r for r in results if r['title'] and r['url']]
+            except Exception as e:
+              print(f'RSS error: {e}')
+              return []
+
+          def get_existing_urls():
+            req = urllib.request.Request(
+              SUPABASE_URL + '/rest/v1/deaths?select=source_url',
+              headers={'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY}
+            )
+            with urllib.request.urlopen(req) as r:
+              data = json.loads(r.read())
+            return {row['source_url'] for row in data}
+
+          def get_next_id():
+            req = urllib.request.Request(
+              SUPABASE_URL + '/rest/v1/deaths?select=id&order=id.desc&limit=1',
+              headers={'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY}
+            )
+            with urllib.request.urlopen(req) as r:
+              data = json.loads(r.read())
+            return (data[0]['id'] + 1) if data else 1
+
+          def claude_extract(article):
+            today = datetime.date.today().strftime('%-d %b %Y')
+            prompt = f"""You are the editor of "100 Ways to Die in India" — a dark satire site documenting avoidable deaths caused by negligence and systemic failure in India.
+
+          Analyse this news article. Return ONLY a JSON object, no markdown, no backticks.
+
+          If it is NOT about an avoidable death in India return: {{"skip":true}}
+
+          If it IS, return:
+          {{
+            "date": "date of incident e.g. '{today}'",
+            "tag": "one of: Fire Safety | Infrastructure | Road Safety | Gender Violence | Medical Negligence | Labour Safety | Stampede | Climate Negligence | Caste Violence | Food Safety | Custodial Death | Education Pressure | Systemic Rot",
+            "cat": "one of: fire | road | women | student | infra | medical | labour | stampede | environment | system",
+            "headline": "stark 1-2 line headline taunting the system. NO <em> tags here.",
+            "em_phrase": "the single most damning phrase from the headline that should appear in red. Must be an exact substring of headline.",
+            "body": "2-3 sentences. Location, what happened, systemic failure, useless response. Under 75 words."
+          }}
+
+          ARTICLE TITLE: {article['title']}
+          ARTICLE DESCRIPTION: {article['desc']}
+          URL: {article['url']}"""
+
+            payload = json.dumps({
+              'model': 'claude-haiku-4-5-20251001',
+              'max_tokens': 600,
+              'messages': [{'role': 'user', 'content': prompt}]
+            }).encode()
+
+            req = urllib.request.Request(
+              'https://api.anthropic.com/v1/messages',
+              data=payload,
+              headers={
+                'x-api-key': ANTHROPIC_KEY,
+                'anthropic-version': '2023-06-01',
+                'content-type': 'application/json'
+              }
+            )
+            with urllib.request.urlopen(req, timeout=30) as r:
+              resp = json.loads(r.read())
+
+            text = resp['content'][0]['text'].strip()
+            print(f'Claude raw: {text[:300]}')
+            text = re.sub(r'^```(?:json)?\s*', '', text)
+            text = re.sub(r'\s*```$', '', text)
+            m = re.search(r'\{.*\}', text, re.DOTALL)
+            if not m:
+              return None
+            result = json.loads(m.group())
+            if result.get('skip'):
+              return None
+            required = ['date','tag','cat','headline','em_phrase','body']
+            if any(not result.get(k) for k in required):
+              print(f'Missing fields: {[k for k in required if not result.get(k)]}')
+              return None
+            return result
+
+          def clear_latest():
+            payload = json.dumps({'is_latest': 'false'}).encode()
+            req = urllib.request.Request(
+              SUPABASE_URL + '/rest/v1/deaths?is_latest=eq.true',
+              data=payload,
+              method='PATCH',
+              headers={
+                'apikey': SUPABASE_KEY,
+                'Authorization': 'Bearer ' + SUPABASE_KEY,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=minimal'
+              }
+            )
+            with urllib.request.urlopen(req) as r:
+              pass
+
+          def insert_case(case_data, article_url, next_id, image_url):
+            row = {
+              'id': next_id,
+              'date': case_data['date'],
+              'tag': case_data['tag'],
+              'cat': case_data['cat'],
+              'headline': case_data['headline'],
+              'em_phrase': case_data['em_phrase'],
+              'body': case_data['body'],
+              'source_url': article_url,
+              'image_url': image_url,
+              'is_latest': 'true'
+            }
+            payload = json.dumps(row).encode()
+            req = urllib.request.Request(
+              SUPABASE_URL + '/rest/v1/deaths',
+              data=payload,
+              method='POST',
+              headers={
+                'apikey': SUPABASE_KEY,
+                'Authorization': 'Bearer ' + SUPABASE_KEY,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=minimal'
+              }
+            )
+            with urllib.request.urlopen(req) as r:
+              print(f'Inserted case #{next_id}: {case_data["tag"]} / {case_data["date"]}')
+
+          # Main
+          day_index = datetime.date.today().toordinal() % len(QUERIES)
+          query = QUERIES[day_index]
+          print(f'Query: {query}')
+
+          articles = fetch_rss(query)
+          print(f'Articles found: {len(articles)}')
+
+          existing_urls = get_existing_urls()
+          fresh = [a for a in articles if a['url'] not in existing_urls]
+          print(f'Fresh articles: {len(fresh)}')
+
+          case_data = None
+          used_article = None
+          for article in fresh:
+            print(f'Trying: {article["title"][:80]}')
+            try:
+              case_data = claude_extract(article)
+              if case_data:
+                used_article = article
+                break
+            except Exception as e:
+              print(f'Error: {e}')
+              continue
+
+          if not case_data:
+            print('No suitable article found today.')
+            exit(0)
+
+          next_id   = get_next_id()
+          image_url = UNSPLASH.get(case_data['cat'], UNSPLASH['system'])
+          clear_latest()
+          insert_case(case_data, used_article['url'], next_id, image_url)
+          print('Done.')
+          EOF
