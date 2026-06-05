@@ -356,23 +356,22 @@ jobs:
           - 20–49: Possible negligence, unclear, or very minor incident
           - 0–19: Not eligible
 
-          If NOT eligible return: {"skip": true, "score": 0}
+          If NOT eligible return: {{"skip": true, "score": 0}}
 
           If eligible return this JSON exactly:
-          {
+          {{
             "skip": false,
             "score": <0-100 integer>,
-            "date": "<human readable date e.g. '4 Jun 2025', use 'Unknown' if not clear>",
+            "date": "<human readable date>",
             "incident_date": "<ISO date YYYY-MM-DD or null if unknown>",
-            "tag": "<one of: Fire Safety | Infrastructure | Road Safety | Gender Violence | Medical Negligence | Labour Safety | Stampede | Climate Negligence | Caste Violence | Food Safety | Custodial Death | Education Pressure | Systemic Rot | Gas & Industrial>",
-            "cat": "<one of: fire | road | women | student | infra | medical | labour | stampede | environment | system>",
-            "headline": "<stark 1-2 line headline taunting the system. NO html tags. Use plain text only.>",
-            "em_phrase": "<exact substring of headline that should appear in red — the most damning phrase>",
-            "body": "<2-3 sentences: location, what happened, what the systemic failure was, what useless response followed. Under 75 words. Factual and bitter.>",
-            "death_count": <integer number of confirmed deaths, 0 if unknown>,
-            "confidence": <0.0 to 1.0 float — how confident you are this is a real avoidable death>
-          }
-
+            "tag": "<tag>",
+            "cat": "<cat>",
+            "headline": "<headline>",
+            "em_phrase": "<phrase>",
+            "body": "<body>",
+            "death_count": <integer>,
+            "confidence": <float>
+          }}
           ARTICLE TITLE: {title}
           PUBLISHED: {pub_date}
           SOURCE: {url}
