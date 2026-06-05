@@ -75,7 +75,6 @@ body {
 }
 #intro.gone { opacity:0; pointer-events:none; }
 
-/* The single centred text stage */
 #intro-stage {
   position: relative;
   width: min(680px, 90vw);
@@ -84,7 +83,6 @@ body {
   text-align: center;
 }
 
-/* Each "beat" of the story — absolutely overlaid */
 .beat {
   position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center;
@@ -121,10 +119,8 @@ body {
   line-height: 1.65; letter-spacing: 0.3px;
   text-align: center; max-width: 480px;
   display: none;
-
 }
 
-/* Word-by-word reveal: each word is a span, staggered in */
 .beat-text .word {
   display: inline;
   opacity: 0;
@@ -133,7 +129,6 @@ body {
 }
 .beat.visible .word { opacity:1; transform:none; }
 
-/* Progress dots */
 #intro-dots {
   position: fixed; bottom: 36px; left: 50%;
   transform: translateX(-50%);
@@ -148,7 +143,6 @@ body {
 }
 .dot.active { background: var(--blood); transform: scale(1.4); }
 
-/* Scroll / swipe nudge */
 #intro-hint {
   position: fixed; bottom: 70px; left: 50%;
   transform: translateX(-50%);
@@ -165,7 +159,6 @@ body {
   50%      { transform: translateX(-50%) translateY(-5px); }
 }
 
-/* CTA on last beat */
 .beat-cta {
   margin-top: 20px;
   font-family: 'DM Mono', monospace;
@@ -177,7 +170,7 @@ body {
 @keyframes pulse { 0%,100%{opacity:0.5} 50%{opacity:1} }
 
 /* ═══════════════════════════════════
-   TOP BAR (cards phase)
+   TOP BAR
 ═══════════════════════════════════ */
 #topbar {
   position: fixed; top:0; left:0; right:0; z-index:200;
@@ -215,7 +208,7 @@ body {
 #progressfill { height:100%; background:var(--blood); transition:width 0.5s ease; width:1%; }
 
 /* ═══════════════════════════════════
-   CARDS VIEWPORT
+   CARDS
 ═══════════════════════════════════ */
 #viewport { position:fixed; inset:0; overflow:hidden; }
 
@@ -285,6 +278,13 @@ body {
   font-size: clamp(8px,1.6vw,10px); letter-spacing:2px;
   color:rgba(232,221,208,0.28);
 }
+.publisher-label {
+  font-family:'DM Mono',monospace;
+  font-size: clamp(7px,1.4vw,9px); letter-spacing:1.5px; text-transform:uppercase;
+  color:rgba(232,221,208,0.18);
+  border-left: 1px solid rgba(232,221,208,0.12);
+  padding-left: 10px; margin-left: 2px;
+}
 .latest-badge {
   font-family:'DM Mono',monospace;
   font-size: clamp(7px,1.5vw,9px); letter-spacing:2px; text-transform:uppercase;
@@ -349,7 +349,7 @@ body {
 .navbtn:disabled { opacity:0.12; cursor:default; }
 
 /* ═══════════════════════════════════
-   SWIPE HINT (cards phase)
+   SWIPE HINT
 ═══════════════════════════════════ */
 #swipe-hint {
   position:fixed; bottom:28px; left:50%; transform:translateX(-50%);
@@ -391,7 +391,7 @@ body {
 <!-- ══ ERROR ══ -->
 <div id="error-screen">
   <div class="err-title">The data couldn't load.</div>
-  <div class="err-body">Wait...Dont Die</div>
+  <div class="err-body">Wait... Don't Die</div>
   <div class="err-code" id="err-detail"></div>
 </div>
 
@@ -399,7 +399,6 @@ body {
 <div id="intro">
   <div id="intro-stage">
 
-    <!-- Beat 0: Title -->
     <div class="beat" id="beat-0">
       <div class="beat-text">
         <span class="mono">A record of preventable deaths</span>
@@ -411,7 +410,6 @@ body {
       </div>
     </div>
 
-    <!-- Beat 1 -->
     <div class="beat" id="beat-1">
       <div class="beat-text">
         <span class="word" style="--i:0">You</span>
@@ -425,7 +423,6 @@ body {
       </div>
     </div>
 
-    <!-- Beat 2 -->
     <div class="beat" id="beat-2">
       <div class="beat-text">
         <span class="word" style="--i:0">A</span>
@@ -437,10 +434,8 @@ body {
         <span class="word" style="--i:6"> the</span>
         <span class="word" style="--i:7"> sky.</span>
       </div>
-      <div class="beat-sub">While you're just sitting in your car. Going to work. Like a normal person.</div>
     </div>
 
-    <!-- Beat 3 -->
     <div class="beat" id="beat-3">
       <div class="beat-text">
         <span class="word" style="--i:0">A</span>
@@ -454,10 +449,8 @@ body {
         <span class="word" style="--i:8"> life</span>
         <span class="word" style="--i:9"> jackets.</span>
       </div>
-      <div class="beat-sub">There never are. The contractor saved money. Someone signed off. Your family never finds out why.</div>
     </div>
 
-    <!-- Beat 4 -->
     <div class="beat" id="beat-4">
       <div class="beat-text">
         <span class="word" style="--i:0">You</span>
@@ -476,10 +469,8 @@ body {
         <span class="word" style="--i:13"> your</span>
         <span class="word" style="--i:14"> exam.</span>
       </div>
-      <div class="beat-sub">14 hours a day. For years. The paper leaked before you even sat down.</div>
     </div>
 
-    <!-- Beat 5 -->
     <div class="beat" id="beat-5">
       <div class="beat-text">
         <span class="word" style="--i:0">You</span>
@@ -490,10 +481,8 @@ body {
         <span class="word" style="--i:5"> a</span>
         <span class="word" style="--i:6"> pothole.</span>
       </div>
-      <div class="beat-sub">Not metaphorically. Literally. 2,385 people did in 2024 alone. The PWD submitted its report on time.</div>
     </div>
 
-    <!-- Beat 6 -->
     <div class="beat" id="beat-6">
       <div class="beat-text">
         <span class="word" style="--i:0">You</span>
@@ -508,10 +497,8 @@ body {
         <span class="word" style="--i:9"> cricket</span>
         <span class="word" style="--i:10"> celebration.</span>
       </div>
-      <div class="beat-sub">Nobody planned. Nobody asked. RCB just announced it. 11 people died celebrating their team winning. Nobody went to jail.</div>
     </div>
 
-    <!-- Beat 7 -->
     <div class="beat" id="beat-7">
       <div class="beat-text">
         <span class="word" style="--i:0">You</span>
@@ -525,10 +512,8 @@ body {
         <span class="word" style="--i:8"> <span class="red">choke</span>,</span>
         <span class="word" style="--i:9"> die —</span>
       </div>
-      <div class="beat-sub">And the government will tell Parliament it never happened. Because technically, you weren't a "manual scavenger." You were a "cleaning worker." Different form. Different column. Same death.</div>
     </div>
 
-    <!-- Beat 8 — the accusation -->
     <div class="beat" id="beat-8">
       <div class="beat-text">
         <span class="word" style="--i:0">And</span>
@@ -541,20 +526,14 @@ body {
       </div>
     </div>
 
-    <!-- Beat 9 — the answer -->
     <div class="beat" id="beat-9">
       <div class="beat-text" style="font-size:clamp(44px,11vw,80px); letter-spacing:-2px; line-height:1.05;">
         <span class="word" style="--i:0"><span class="red">No</span></span>
         <span class="word" style="--i:1"> <span class="red">one</span></span>
         <span class="word" style="--i:2"> <span class="red">cares.</span></span>
       </div>
-      <div class="beat-sub" style="margin-top:16px; color:rgba(232,221,208,0.3);">
-        Not about you. Not about the next one. Not until it happens to someone who matters.<br>
-        <span style="color:rgba(232,221,208,0.15);">And somehow, in this country, that's never you.</span>
-      </div>
     </div>
 
-    <!-- Beat 10 — CTA / transition -->
     <div class="beat" id="beat-10">
       <div class="beat-text" style="font-size:clamp(44px,11vw,80px); font-weight:700; color:rgba(232,221,208,0.5); line-height:1.5;">
         <span class="word" style="--i:0">These</span>
@@ -562,29 +541,23 @@ body {
         <span class="word" style="--i:2"> not</span>
         <span class="word" style="--i:3"> accidents.</span>
       </div>
-      <div class="beat-text" style="font-size:clamp(44px,11vw,80px; font-weight:700; color:rgba(232,221,208,0.5); margin-top:10px; line-height:1.5;">
+      <div class="beat-text" style="font-size:clamp(44px,11vw,80px); font-weight:700; color:rgba(232,221,208,0.5); margin-top:10px; line-height:1.5;">
         <span class="word" style="--i:4">They</span>
         <span class="word" style="--i:5"> are</span>
         <span class="word" style="--i:6"> <span class="red">decisions.</span></span>
       </div>
-      <div class="beat-sub" style="margin-top:18px; color:rgba(232,221,208,0.25);">
-        Made by people who will never be held accountable.<br>Paid for by people who had no say.
-      </div>
       <div class="beat-cta" id="enter-cta" onclick="enterCases()">
-        Read the 100 cases →
+        Read the cases →
       </div>
     </div>
 
-  </div><!-- /intro-stage -->
-</div><!-- /intro -->
+  </div>
+</div>
 
-<!-- Intro progress dots -->
 <div id="intro-dots"></div>
-
-<!-- Scroll hint -->
 <div id="intro-hint">swipe up or scroll ↑</div>
 
-<!-- ══ CARDS PHASE ══ -->
+<!-- ══ CARDS ══ -->
 <div id="progressbar"><div id="progressfill"></div></div>
 <div id="topbar">
   <div id="topbar-title">100 Ways to Die in India</div>
@@ -601,168 +574,145 @@ body {
 <div id="swipe-hint">swipe up · scroll down</div>
 
 <script>
-/* ═══════════════════════════════════════════════════════
+/* ═══════════════════════════════
    CONFIG
-═══════════════════════════════════════════════════════ */
-const SUPABASE_URL = 'https://lqzzxjnrndnzolxcbwsd.supabase.co';
+═══════════════════════════════ */
+const SUPABASE_URL      = 'https://lqzzxjnrndnzolxcbwsd.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxxenp4am5ybmRuem9seGNid3NkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2NTIzNDYsImV4cCI6MjA5NjIyODM0Nn0.-lgcRMAbrqnQAhUpA35xXFzyDI9YCJjtDclMys-TnrA';
-const CACHE_HOURS = 1;
-/* ═══════════════════════════════════════════════════════
-   SHEET COLUMN HEADERS (row 1 of your sheet):
-   id | date | tag | cat | headline | em_phrase | body | source_url | image_url | is_latest
-════════════════════════════════════════════════════════ */
+const CACHE_HOURS       = 1;
 
+/* ═══════════════════════════════
+   CONSTANTS
+═══════════════════════════════ */
 const CAT_COLORS = {
-  fire:        '#c0180c', road:   '#9b4a1e', women:  '#8b0036',
-  student:     '#1a3a6b', infra:  '#1a4020', medical:'#0d4040',
-  labour:      '#5a3000', stampede:'#6b4800',system: '#1a1a2e',
+  fire:        '#c0180c',
+  road:        '#9b4a1e',
+  women:       '#8b0036',
+  student:     '#1a3a6b',
+  infra:       '#1a4020',
+  medical:     '#0d4040',
+  labour:      '#5a3000',
+  stampede:    '#6b4800',
+  system:      '#1a1a2e',
   environment: '#002a10',
 };
 
-/* ═══════════════════════════════════
+const TOTAL_BEATS = 11; // beats 0..10
+
+/* ═══════════════════════════════
    INTRO ENGINE
-═══════════════════════════════════ */
-const TOTAL_BEATS = 11; // 0..10
+═══════════════════════════════ */
 let beatIdx    = 0;
 let introPhase = true;
-let introLock  = false; // debounce between beats
+let introLock  = false;
 
-// Build dots
+// Build progress dots
 const dotsEl = document.getElementById('intro-dots');
 for (let i = 0; i < TOTAL_BEATS; i++) {
   const d = document.createElement('div');
   d.className = 'dot' + (i === 0 ? ' active' : '');
-  d.dataset.i = i;
   dotsEl.appendChild(d);
 }
 
-function showBeat(idx, dir) {
-  // Hide all
+function showBeat(idx) {
   document.querySelectorAll('.beat').forEach(b => b.classList.remove('visible'));
-
   const beat = document.getElementById('beat-' + idx);
   if (!beat) return;
-
-  // Stagger words
-  const words = beat.querySelectorAll('.word');
-  words.forEach((w, i) => {
+  // Stagger word transitions
+  beat.querySelectorAll('.word').forEach((w, i) => {
     w.style.transitionDelay = (i * 0.055) + 's';
   });
-
   beat.classList.add('visible');
-
-  // Dots
+  // Update dots
   document.querySelectorAll('.dot').forEach((d, i) => {
     d.classList.toggle('active', i === idx);
   });
-
-  // Hide hint after first advance
   if (idx > 0) document.getElementById('intro-hint').classList.add('gone');
-  // Hide dots on last beat
   if (idx === TOTAL_BEATS - 1) document.getElementById('intro-dots').classList.add('gone');
 }
 
 function advanceBeat(dir) {
-  if (introLock) return;
-  if (!introPhase) return;
-
+  if (introLock || !introPhase) return;
   const next = beatIdx + dir;
   if (next < 0) return;
   if (next >= TOTAL_BEATS) { enterCases(); return; }
-
   introLock = true;
   beatIdx = next;
-  showBeat(beatIdx, dir);
+  showBeat(beatIdx);
   setTimeout(() => { introLock = false; }, 700);
 }
 
 function enterCases() {
   if (!introPhase) return;
   introPhase = false;
-
   document.getElementById('intro').classList.add('gone');
   document.getElementById('intro-dots').classList.add('gone');
   document.getElementById('intro-hint').classList.add('gone');
-
   document.getElementById('topbar').classList.add('show');
   document.getElementById('progressbar').classList.add('show');
   document.getElementById('nav').classList.add('show');
   document.getElementById('swipe-hint').classList.add('show');
-
-  // Activate first card if deaths loaded
-  if (DEATHS.length > 0) {
-    activateCard(0, 1);
-  }
+  if (DEATHS.length > 0) activateCard(0, 1);
 }
 
-/* ═══════════════════════════════════
-   DATA & CARDS
-═══════════════════════════════════ */
+/* ═══════════════════════════════
+   DATA & STATE
+═══════════════════════════════ */
 let DEATHS      = [];
 let current     = 0;
 let cardAnim    = false;
 let touchStartY = null;
 let lastWheel   = 0;
 
-function parseCSV(text) {
-  const rows = [];
-  let row = [], cell = '', inQ = false;
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
-    if (c === '"') {
-      if (inQ && text[i+1] === '"') { cell += '"'; i++; }
-      else inQ = !inQ;
-    } else if (c === ',' && !inQ) {
-      row.push(cell); cell = '';
-    } else if ((c === '\n' || c === '\r') && !inQ) {
-      if (c === '\r' && text[i+1] === '\n') i++;
-      row.push(cell); cell = '';
-      rows.push(row); row = [];
-    } else { cell += c; }
-  }
-  row.push(cell);
-  if (row.some(x => x !== '')) rows.push(row);
-  if (rows.length < 2) return [];
-  const hdrs = rows[0].map(h => h.trim().toLowerCase().replace(/\s+/g,'_'));
-  return rows.slice(1).map(cols => {
-    const obj = {};
-    hdrs.forEach((h,i) => { obj[h] = (cols[i]||'').trim(); });
-    return obj;
-  }).filter(r => r.id && r.headline);
-}
-
+/* ═══════════════════════════════
+   HEADLINE BUILDER
+   Handles newlines from Supabase text fields
+   and wraps em_phrase in <em> for red colour
+═══════════════════════════════ */
 function buildHeadline(headline, emPhrase) {
-  // Handle both real newlines (from Google Sheets CSV) and literal \n strings
-  let h = headline
-    .replace(/\r\n/g, '<br>')   // Windows newlines from Sheets
-    .replace(/\r/g, '<br>')     // old Mac newlines
-    .replace(/\n/g, '<br>')     // Unix newlines (most common from Sheets)
-    .replace(/\\n/g, '<br>')    // literal backslash-n (fallback)
-    .replace(/  +/g, '<br>');   // double-space fallback
+  let h = (headline || '')
+    .replace(/\r\n/g, '<br>')
+    .replace(/\r/g,   '<br>')
+    .replace(/\n/g,   '<br>')
+    .replace(/\\n/g,  '<br>')
+    .replace(/  +/g,  '<br>');
 
   if (emPhrase && emPhrase.trim()) {
     const phrase = emPhrase.trim();
-    // Escape regex special chars
-    const esc = phrase.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-    // Use 'is' flags: case-insensitive + dotAll (crosses newlines/br tags)
+    const esc    = phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     h = h.replace(new RegExp(esc, 'i'), `<em>${phrase}</em>`);
   }
   return h;
 }
 
+/* ═══════════════════════════════
+   CARD BUILDER
+═══════════════════════════════ */
 function buildCard(d, idx, total) {
-  const card  = document.createElement('div');
-  card.className = 'card';
+  const card = document.createElement('div');
+  card.className   = 'card';
   card.dataset.idx = idx;
-  const cc      = CAT_COLORS[d.cat] || '#111';
-  const latest  = d.is_latest === 'true';
-  const hl      = buildHeadline(d.headline||'', d.em_phrase||'');
-  const num     = String(parseInt(d.id)||idx+1).padStart(2,'0');
-  // Fix Unsplash hotlink: add auto=format&fit=crop so CDN serves from any server referrer
+
+  const cc     = CAT_COLORS[d.cat] || '#111';
+  // Supabase returns boolean true, not string 'true'
+  const latest = d.is_latest === true || d.is_latest === 'true';
+  const hl     = buildHeadline(d.headline, d.em_phrase);
+  const num    = String(parseInt(d.id) || idx + 1).padStart(2, '0');
+
+  // Ensure Unsplash URLs work as hotlinks from any server
   let imgUrl = d.image_url || '';
   if (imgUrl.includes('unsplash.com') && !imgUrl.includes('auto=format')) {
     imgUrl += (imgUrl.includes('?') ? '&' : '?') + 'auto=format&fit=crop';
   }
+
+  // Publisher — only show if present and not generic 'Unknown'
+  const pub = (d.publisher && d.publisher !== 'Unknown')
+    ? `<span class="publisher-label">${d.publisher}</span>`
+    : '';
+
+  // Latest badge
+  const latestBadge = latest ? '<span class="latest-badge">latest</span>' : '';
+
   card.innerHTML = `
     <div class="cat-bar" style="background:${cc};opacity:0.6"></div>
     <div class="card-bg" style="background-image:url('${imgUrl}')"></div>
@@ -771,82 +721,96 @@ function buildCard(d, idx, total) {
     <div class="card-body">
       <div class="case-num">${num}</div>
       <div class="card-meta">
-        <span class="tag-pill">${d.tag||'Systemic Failure'}</span>
-        <span class="death-date">${d.date||''}</span>
-        ${latest?'<span class="latest-badge">latest</span>':''}
+        <span class="tag-pill">${d.tag || 'Systemic Failure'}</span>
+        <span class="death-date">${d.date || ''}</span>
+        ${pub}
+        ${latestBadge}
       </div>
       <div class="death-headline">${hl}</div>
-      <div class="death-body">${d.body||''}</div>
+      <div class="death-body">${d.body || ''}</div>
       <div class="card-footer">
-        <a class="source-btn" href="${d.source_url||'#'}" target="_blank" rel="noopener">Read source →</a>
-        <span class="count-pill">${idx+1} / ${total}</span>
+        <a class="source-btn" href="${d.source_url || '#'}" target="_blank" rel="noopener">Read source →</a>
+        <span class="count-pill">${idx + 1} / ${total}</span>
       </div>
     </div>`;
+
   return card;
 }
 
 function renderCards(deaths) {
   const vp = document.getElementById('viewport');
   vp.innerHTML = '';
-  deaths.forEach((d,i) => vp.appendChild(buildCard(d,i,deaths.length)));
+  deaths.forEach((d, i) => vp.appendChild(buildCard(d, i, deaths.length)));
 }
 
+/* ═══════════════════════════════
+   CARD NAVIGATION
+═══════════════════════════════ */
 function activateCard(idx, dir) {
   if (cardAnim || idx < 0 || idx >= DEATHS.length) return;
   cardAnim = true;
+
   const vp   = document.getElementById('viewport');
   const prev = vp.querySelector('.card.active');
   if (prev) {
     prev.classList.remove('active');
     prev.style.transform = dir > 0 ? 'translateY(-100vh)' : 'translateY(100vh)';
     prev.style.opacity   = '0';
-    setTimeout(() => { prev.style.transform=''; prev.style.opacity=''; }, 820);
+    setTimeout(() => { prev.style.transform = ''; prev.style.opacity = ''; }, 820);
   }
+
   const next = vp.querySelector(`[data-idx="${idx}"]`);
-  if (!next) { cardAnim=false; return; }
+  if (!next) { cardAnim = false; return; }
+
   next.style.transform  = dir > 0 ? 'translateY(100vh)' : 'translateY(-100vh)';
   next.style.opacity    = '0';
   next.style.transition = 'none';
   requestAnimationFrame(() => requestAnimationFrame(() => {
     next.style.transition = '';
     next.classList.add('active');
-    next.style.transform = '';
-    next.style.opacity   = '';
+    next.style.transform  = '';
+    next.style.opacity    = '';
   }));
+
   current = idx;
   const total = DEATHS.length;
   document.getElementById('topbar-counter').textContent =
-    `${String(current+1).padStart(3,'0')} / ${total}`;
+    `${String(current + 1).padStart(3, '0')} / ${total}`;
   document.getElementById('progressfill').style.width =
-    `${((current+1)/total)*100}%`;
-  document.getElementById('btn-up').disabled   = current===0;
-  document.getElementById('btn-down').disabled = current===total-1;
-  if (current>0) {
-    document.getElementById('swipe-hint').classList.add('hidden');
-  }
-  setTimeout(() => { cardAnim=false; }, 820);
+    `${((current + 1) / total) * 100}%`;
+  document.getElementById('btn-up').disabled   = current === 0;
+  document.getElementById('btn-down').disabled = current === total - 1;
+  if (current > 0) document.getElementById('swipe-hint').classList.add('hidden');
+
+  setTimeout(() => { cardAnim = false; }, 820);
 }
 
-/* cache */
+/* ═══════════════════════════════
+   CACHE
+═══════════════════════════════ */
 function getCached() {
   try {
     const raw = localStorage.getItem('deaths_v5');
     if (!raw) return null;
-    const {ts,data} = JSON.parse(raw);
-    if (Date.now()-ts > CACHE_HOURS*3600000) return null;
+    const { ts, data } = JSON.parse(raw);
+    if (Date.now() - ts > CACHE_HOURS * 3600000) return null;
     return data;
-  } catch(e){ return null; }
-}
-function setCache(data) {
-  try {
-    localStorage.setItem('deaths_v5', JSON.stringify({ts:Date.now(),data}));
-    localStorage.setItem('deaths_v5_ts', new Date().toISOString());
-  } catch(e){}
+  } catch(e) { return null; }
 }
 
-/* fetch */
-async function fetchFromSheet() {
-  // Check cache first
+function setCache(data) {
+  try {
+    localStorage.setItem('deaths_v5', JSON.stringify({ ts: Date.now(), data }));
+    localStorage.setItem('deaths_v5_ts', new Date().toISOString());
+  } catch(e) {}
+}
+
+/* ═══════════════════════════════
+   SUPABASE FETCH
+   Orders by rank ASC (best cases first),
+   falls back to id ASC for unranked rows
+═══════════════════════════════ */
+async function fetchDeaths() {
   const cached = getCached();
   if (cached && cached.length > 0) {
     setLoadStatus('Loading…', 70);
@@ -855,112 +819,116 @@ async function fetchFromSheet() {
   }
 
   setLoadStatus('Fetching cases…', 40);
+
   const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/deaths?select=*&order=id.asc`,
+    `${SUPABASE_URL}/rest/v1/deaths?select=*&order=rank.asc.nullslast,id.asc`,
     {
       headers: {
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`
+        apikey:        SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
       }
     }
   );
 
-  if (!res.ok) throw new Error(`Supabase returned HTTP ${res.status}`);
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Supabase HTTP ${res.status}: ${body.substring(0, 200)}`);
+  }
 
   const data = await res.json();
-  if (!data.length) throw new Error('No cases found in database.');
+  if (!Array.isArray(data) || data.length === 0) {
+    throw new Error('No cases found in database. Check your Supabase table and RLS policy.');
+  }
 
-  setLoadStatus('Parsing cases…', 80);
+  setLoadStatus('Rendering…', 85);
   setCache(data);
   return data;
 }
 
+/* ═══════════════════════════════
+   BOOT
+═══════════════════════════════ */
 async function boot() {
-  setLoadStatus('Retrieving the dead…',10);
+  setLoadStatus('Retrieving the dead…', 10);
   await sleep(400);
+
   try {
-    DEATHS = await fetchFromSheet();
-    setLoadStatus(`${DEATHS.length} cases loaded.`,95);
+    DEATHS = await fetchDeaths();
+    setLoadStatus(`${DEATHS.length} cases loaded.`, 95);
     renderCards(DEATHS);
     await sleep(350);
 
+    // Show last-fetched timestamp
     const ts = localStorage.getItem('deaths_v5_ts');
     if (ts) {
-      const d = new Date(ts);
       document.getElementById('last-updated').textContent =
-        'updated '+d.toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+        'updated ' + new Date(ts).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
     }
 
     document.getElementById('loading').classList.add('gone');
-    setTimeout(()=>{ try{document.getElementById('loading').remove();}catch(e){} },1200);
+    setTimeout(() => {
+      try { document.getElementById('loading').remove(); } catch(e) {}
+    }, 1200);
 
-    // Start intro
-    showBeat(0, 1);
+    showBeat(0);
 
   } catch(err) {
-    console.error(err);
+    console.error('Boot error:', err);
     document.getElementById('loading').classList.add('gone');
     document.getElementById('error-screen').classList.add('show');
     document.getElementById('err-detail').textContent = err.message;
   }
 }
 
-function setLoadStatus(msg,pct) {
+function setLoadStatus(msg, pct) {
   document.getElementById('load-status').textContent = msg;
-  document.getElementById('load-bar').style.width = pct+'%';
+  document.getElementById('load-bar').style.width    = pct + '%';
 }
-function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-/* ═══════════════════════════════════
-   UNIFIED INPUT HANDLER
-   — during intro: advance beats
-   — during cards: navigate cards
-═══════════════════════════════════ */
+/* ═══════════════════════════════
+   UNIFIED INPUT
+   Intro phase  → advance beats
+   Cards phase  → navigate cards
+═══════════════════════════════ */
 function handleNext() {
   if (introPhase) advanceBeat(1);
-  else activateCard(current+1, 1);
+  else activateCard(current + 1, 1);
 }
 function handlePrev() {
   if (introPhase) advanceBeat(-1);
-  else activateCard(current-1,-1);
+  else activateCard(current - 1, -1);
 }
 
-// Buttons
-document.getElementById('btn-up').addEventListener('click',   ()=>activateCard(current-1,-1));
-document.getElementById('btn-down').addEventListener('click', ()=>activateCard(current+1, 1));
+document.getElementById('btn-up').addEventListener('click',   () => activateCard(current - 1, -1));
+document.getElementById('btn-down').addEventListener('click', () => activateCard(current + 1,  1));
 
-// Keyboard
 document.addEventListener('keydown', e => {
-  if (['ArrowDown','PageDown',' '].includes(e.key)) { e.preventDefault(); handleNext(); }
-  if (['ArrowUp','PageUp'].includes(e.key))         { e.preventDefault(); handlePrev(); }
-  if (e.key==='Enter' && introPhase) handleNext();
+  if (['ArrowDown', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); handleNext(); }
+  if (['ArrowUp',   'PageUp'       ].includes(e.key)) { e.preventDefault(); handlePrev(); }
+  if (e.key === 'Enter' && introPhase) handleNext();
 });
 
-// Wheel
 document.addEventListener('wheel', e => {
   const now = Date.now();
-  if (now-lastWheel < 800) return;
+  if (now - lastWheel < 800) return;
   lastWheel = now;
-  if (e.deltaY > 25)       handleNext();
+  if      (e.deltaY >  25) handleNext();
   else if (e.deltaY < -25) handlePrev();
-}, {passive:true});
+}, { passive: true });
 
-// Touch
 document.addEventListener('touchstart', e => {
   touchStartY = e.touches[0].clientY;
-}, {passive:true});
+}, { passive: true });
 
 document.addEventListener('touchend', e => {
   if (touchStartY === null) return;
   const dy = touchStartY - e.changedTouches[0].clientY;
-  if (Math.abs(dy) > 50) {
-    if (dy > 0) handleNext();
-    else handlePrev();
-  }
+  if (Math.abs(dy) > 50) dy > 0 ? handleNext() : handlePrev();
   touchStartY = null;
-}, {passive:true});
+}, { passive: true });
 
-// Tap (mobile) — tap on intro to advance
+// Tap anywhere on intro stage to advance (mobile)
 document.getElementById('intro').addEventListener('click', e => {
   if (e.target.id === 'enter-cta' || e.target.closest('#enter-cta')) return;
   if (introPhase) advanceBeat(1);
