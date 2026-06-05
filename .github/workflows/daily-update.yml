@@ -14,7 +14,7 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: |
           python3 << 'EOF'
           import urllib.request, urllib.parse, json, os, datetime, re
@@ -22,8 +22,7 @@ jobs:
           ANTHROPIC_KEY = os.environ['ANTHROPIC_API_KEY']
           SUPABASE_URL  = os.environ['SUPABASE_URL']
           SUPABASE_KEY  = os.environ['SUPABASE_KEY']  # service_role key — safe here, never in HTML
-          print(f'URL: {SUPABASE_URL}')
-          print(f'Key length: {len(SUPABASE_KEY)}')
+
           
           QUERIES = [
             'India death fire accident negligence',
@@ -80,17 +79,25 @@ jobs:
               print(f'RSS error: {e}')
               return []
 
+          import urllib.error
+
           def supabase_get(path):
-            req = urllib.request.Request(
-              SUPABASE_URL + '/rest/v1/' + path,
-              headers={
-                'apikey': SUPABASE_KEY,
-                'Authorization': 'Bearer ' + SUPABASE_KEY,
-                'Content-Type': 'application/json'
-              }
-            )
-            with urllib.request.urlopen(req, timeout=15) as r:
-              return json.loads(r.read())
+              req = urllib.request.Request(
+                SUPABASE_URL + '/rest/v1/' + path,
+                headers={
+                  'apikey': SUPABASE_KEY,
+                  'Authorization': 'Bearer ' + SUPABASE_KEY,
+                  'Content-Type': 'application/json'
+                }
+              )
+
+              try:
+                  with urllib.request.urlopen(req, timeout=15) as r:
+                      return json.loads(r.read())
+              except urllib.error.HTTPError as e:
+                  print("STATUS:", e.code)
+                  print("BODY:", e.read().decode())
+                  raise
 
           def get_existing_urls():
             data = supabase_get('deaths?select=source_url')
