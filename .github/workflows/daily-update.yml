@@ -22,6 +22,7 @@ jobs:
           ANTHROPIC_KEY = os.environ['ANTHROPIC_API_KEY']
           SUPABASE_URL  = os.environ['SUPABASE_URL']
           SUPABASE_KEY  = os.environ['SUPABASE_KEY']  # service_role key — safe here, never in HTML
+          print(f'Key length: {len(SUPABASE_KEY)}, starts: {SUPABASE_KEY[:12]}')
 
           QUERIES = [
             'India death fire accident negligence',
@@ -97,7 +98,7 @@ jobs:
           def get_next_id():
             data = supabase_get('deaths?select=id&order=id.desc&limit=1')
             return (data[0]['id'] + 1) if data else 1
-            
+
           def claude_extract(article):
             today = datetime.date.today().strftime('%-d %b %Y')
             prompt = f"""You are the editor of "100 Ways to Die in India" — a dark satire site documenting avoidable deaths caused by negligence and systemic failure in India.
