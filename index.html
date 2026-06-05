@@ -604,8 +604,9 @@ body {
 /* ═══════════════════════════════════════════════════════
    CONFIG
 ═══════════════════════════════════════════════════════ */
-const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vStxYztyMFpzrZRju2mdYjVB9T4jmmhL43SFDZvN1SiPjmhaTr0WNhVziLX_3Iz4bEe1c22GrFw1td2/pub?gid=0&single=true&output=csv';
-const CACHE_HOURS   = 0;
+const SUPABASE_URL = 'https://lqzzxjnrndnzolxcbwsd.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxxenp4am5ybmRuem9seGNid3NkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2NTIzNDYsImV4cCI6MjA5NjIyODM0Nn0.-lgcRMAbrqnQAhUpA35xXFzyDI9YCJjtDclMys-TnrA';
+const CACHE_HOURS = 1;
 /* ═══════════════════════════════════════════════════════
    SHEET COLUMN HEADERS (row 1 of your sheet):
    id | date | tag | cat | headline | em_phrase | body | source_url | image_url | is_latest
@@ -829,7 +830,7 @@ function activateCard(idx, dir) {
 /* cache */
 function getCached() {
   try {
-    const raw = localStorage.getItem('deaths_v4');
+    const raw = localStorage.getItem('deaths_v5');
     if (!raw) return null;
     const {ts,data} = JSON.parse(raw);
     if (Date.now()-ts > CACHE_HOURS*3600000) return null;
@@ -838,26 +839,38 @@ function getCached() {
 }
 function setCache(data) {
   try {
-    localStorage.setItem('deaths_v4', JSON.stringify({ts:Date.now(),data}));
-    localStorage.setItem('deaths_v4_ts', new Date().toISOString());
+    localStorage.setItem('deaths_v5', JSON.stringify({ts:Date.now(),data}));
+    localStorage.setItem('deaths_v5_ts', new Date().toISOString());
   } catch(e){}
 }
 
 /* fetch */
 async function fetchFromSheet() {
+  // Check cache first
   const cached = getCached();
-  if (cached && cached.length > 0) { setLoadStatus('Loading…',70); await sleep(250); return cached; }
-  if (!SHEET_CSV_URL || SHEET_CSV_URL.includes('YOUR_GOOGLE_SHEET')) {
-    throw new Error('Paste your Google Sheet CSV URL into the SHEET_CSV_URL config in the <script> block.');
+  if (cached && cached.length > 0) {
+    setLoadStatus('Loading…', 70);
+    await sleep(250);
+    return cached;
   }
-  setLoadStatus('Fetching avoidable tragedies…',40);
-  const url = SHEET_CSV_URL + (SHEET_CSV_URL.includes('?')?'&':'?') + '_=' + Date.now();
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Sheet returned HTTP ${res.status}. Ensure it is published as CSV.`);
-  const text = await res.text();
-  setLoadStatus('Parsing…',80);
-  const data = parseCSV(text);
-  if (!data.length) throw new Error('Zero rows parsed. Check row 1 headers: id,date,tag,cat,headline,em_phrase,body,source_url,image_url,is_latest');
+
+  setLoadStatus('Fetching cases…', 40);
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/deaths?select=*&order=id.asc`,
+    {
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`
+      }
+    }
+  );
+
+  if (!res.ok) throw new Error(`Supabase returned HTTP ${res.status}`);
+
+  const data = await res.json();
+  if (!data.length) throw new Error('No cases found in database.');
+
+  setLoadStatus('Parsing cases…', 80);
   setCache(data);
   return data;
 }
@@ -871,7 +884,7 @@ async function boot() {
     renderCards(DEATHS);
     await sleep(350);
 
-    const ts = localStorage.getItem('deaths_v4_ts');
+    const ts = localStorage.getItem('deaths_v5_ts');
     if (ts) {
       const d = new Date(ts);
       document.getElementById('last-updated').textContent =
