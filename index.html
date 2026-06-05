@@ -4,6 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>100 Ways to Die in India</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23000000'/></svg>">
+<meta property="og:title" content="100 Ways to Die in India">
+<meta property="og:description" content="These deaths were preventable. Someone chose not to prevent them.">
+<meta property="og:image" content="https://images.unsplash.com/photo-1469398715555-76331a6e7b53?w=1200&q=80&auto=format&fit=crop">
+<meta property="og:url" content="https://www.mayanktutorials.com/100-ways-to-die-india.html">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="100 Ways to Die in India">
+<meta name="twitter:description" content="These deaths were preventable. Someone chose not to prevent them.">
+<meta name="twitter:image" content="https://images.unsplash.com/photo-1469398715555-76331a6e7b53?w=1200&q=80&auto=format&fit=crop">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Mono:wght@400;500&family=Barlow+Condensed:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -88,7 +98,7 @@ body {
 
 .beat-text {
   font-family: 'Playfair Display', serif;
-  font-size: clamp(20px, 5vw, 46px);
+  font-size: clamp(36px, 9vw, 58px);
   font-weight: 700;
   line-height: 1.25;
   color: var(--bone);
@@ -106,10 +116,12 @@ body {
 
 .beat-sub {
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: clamp(13px, 2.2vw, 18px);
+  font-size: clamp(16px, 4vw, 20px);
   color: rgba(232,221,208,0.38);
   line-height: 1.65; letter-spacing: 0.3px;
   text-align: center; max-width: 480px;
+  display: none;
+
 }
 
 /* Word-by-word reveal: each word is a span, staggered in */
@@ -531,7 +543,7 @@ body {
 
     <!-- Beat 9 — the answer -->
     <div class="beat" id="beat-9">
-      <div class="beat-text" style="font-size:clamp(32px,8vw,72px); letter-spacing:-2px; line-height:1.05;">
+      <div class="beat-text" style="font-size:clamp(44px,11vw,80px); letter-spacing:-2px; line-height:1.05;">
         <span class="word" style="--i:0"><span class="red">No</span></span>
         <span class="word" style="--i:1"> <span class="red">one</span></span>
         <span class="word" style="--i:2"> <span class="red">cares.</span></span>
@@ -544,13 +556,13 @@ body {
 
     <!-- Beat 10 — CTA / transition -->
     <div class="beat" id="beat-10">
-      <div class="beat-text" style="font-size:clamp(14px,3vw,22px); font-weight:700; color:rgba(232,221,208,0.5); line-height:1.5;">
+      <div class="beat-text" style="font-size:clamp(44px,11vw,80px); font-weight:700; color:rgba(232,221,208,0.5); line-height:1.5;">
         <span class="word" style="--i:0">These</span>
         <span class="word" style="--i:1"> are</span>
         <span class="word" style="--i:2"> not</span>
         <span class="word" style="--i:3"> accidents.</span>
       </div>
-      <div class="beat-text" style="font-size:clamp(14px,3vw,22px); font-weight:700; color:rgba(232,221,208,0.5); margin-top:10px; line-height:1.5;">
+      <div class="beat-text" style="font-size:clamp(44px,11vw,80px; font-weight:700; color:rgba(232,221,208,0.5); margin-top:10px; line-height:1.5;">
         <span class="word" style="--i:4">They</span>
         <span class="word" style="--i:5"> are</span>
         <span class="word" style="--i:6"> <span class="red">decisions.</span></span>
@@ -593,7 +605,7 @@ body {
    CONFIG
 ═══════════════════════════════════════════════════════ */
 const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vStxYztyMFpzrZRju2mdYjVB9T4jmmhL43SFDZvN1SiPjmhaTr0WNhVziLX_3Iz4bEe1c22GrFw1td2/pub?gid=0&single=true&output=csv';
-const CACHE_HOURS   = 6;
+const CACHE_HOURS   = 0;
 /* ═══════════════════════════════════════════════════════
    SHEET COLUMN HEADERS (row 1 of your sheet):
    id | date | tag | cat | headline | em_phrase | body | source_url | image_url | is_latest
@@ -719,10 +731,20 @@ function parseCSV(text) {
 }
 
 function buildHeadline(headline, emPhrase) {
-  let h = headline.replace(/\\n/g,'<br>').replace(/  /g,'<br>');
+  // Handle both real newlines (from Google Sheets CSV) and literal \n strings
+  let h = headline
+    .replace(/\r\n/g, '<br>')   // Windows newlines from Sheets
+    .replace(/\r/g, '<br>')     // old Mac newlines
+    .replace(/\n/g, '<br>')     // Unix newlines (most common from Sheets)
+    .replace(/\\n/g, '<br>')    // literal backslash-n (fallback)
+    .replace(/  +/g, '<br>');   // double-space fallback
+
   if (emPhrase && emPhrase.trim()) {
-    const esc = emPhrase.trim().replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-    h = h.replace(new RegExp(esc,'i'), `<em>${emPhrase.trim()}</em>`);
+    const phrase = emPhrase.trim();
+    // Escape regex special chars
+    const esc = phrase.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    // Use 'is' flags: case-insensitive + dotAll (crosses newlines/br tags)
+    h = h.replace(new RegExp(esc, 'i'), `<em>${phrase}</em>`);
   }
   return h;
 }
@@ -735,9 +757,14 @@ function buildCard(d, idx, total) {
   const latest  = d.is_latest === 'true';
   const hl      = buildHeadline(d.headline||'', d.em_phrase||'');
   const num     = String(parseInt(d.id)||idx+1).padStart(2,'0');
+  // Fix Unsplash hotlink: add auto=format&fit=crop so CDN serves from any server referrer
+  let imgUrl = d.image_url || '';
+  if (imgUrl.includes('unsplash.com') && !imgUrl.includes('auto=format')) {
+    imgUrl += (imgUrl.includes('?') ? '&' : '?') + 'auto=format&fit=crop';
+  }
   card.innerHTML = `
     <div class="cat-bar" style="background:${cc};opacity:0.6"></div>
-    <div class="card-bg" style="background-image:url('${d.image_url||''}')"></div>
+    <div class="card-bg" style="background-image:url('${imgUrl}')"></div>
     <div class="card-vignette"></div>
     <div class="card-grain"></div>
     <div class="card-body">
@@ -823,7 +850,7 @@ async function fetchFromSheet() {
   if (!SHEET_CSV_URL || SHEET_CSV_URL.includes('YOUR_GOOGLE_SHEET')) {
     throw new Error('Paste your Google Sheet CSV URL into the SHEET_CSV_URL config in the <script> block.');
   }
-  setLoadStatus('Fetching from Google Sheets…',40);
+  setLoadStatus('Fetching avoidable tragedies…',40);
   const url = SHEET_CSV_URL + (SHEET_CSV_URL.includes('?')?'&':'?') + '_=' + Date.now();
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Sheet returned HTTP ${res.status}. Ensure it is published as CSV.`);
