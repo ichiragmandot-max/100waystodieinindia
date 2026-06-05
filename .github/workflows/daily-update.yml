@@ -164,7 +164,7 @@ jobs:
             return result
 
           def clear_latest():
-            payload = json.dumps({'is_latest': 'false'}).encode()
+            payload = json.dumps({'is_latest': False}).encode()
             req = urllib.request.Request(
               SUPABASE_URL + '/rest/v1/deaths?is_latest=eq.true',
               data=payload,
@@ -190,7 +190,7 @@ jobs:
               'body': case_data['body'],
               'source_url': article_url,
               'image_url': image_url,
-              'is_latest': 'true'
+              'is_latest': True
             }
             payload = json.dumps(row).encode()
             req = urllib.request.Request(
