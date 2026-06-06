@@ -1046,7 +1046,7 @@ jobs:
             delete_all_rows()
             time.sleep(1)
 
-        # Find the case with the most recent incident_date to mark as latest
+          # Find the case with the most recent incident_date to mark as latest
           def parse_incident_date(case):
             d = case.get('incident_date') or ''
             try:
@@ -1066,7 +1066,8 @@ jobs:
               is_latest = is_latest
             )
             insert_row(row)
-            time.sleep(0.08)            print(f'\n✓ Refresh100 complete. {len(top_cases)} cases in database.')
+            time.sleep(0.08)            
+            print(f'\n✓ Refresh100 complete. {len(top_cases)} cases in database.')
 
             # Print category breakdown
             from collections import Counter
