@@ -7,372 +7,221 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23000000'/></svg>">
 <meta property="og:title" content="100 Ways to Die in India">
 <meta property="og:description" content="These deaths were preventable. Someone chose not to prevent them.">
-<meta property="og:image" content="https://100waystodieinindia.com/preview.png">
+<meta property="og:image" content="https://100waystodieinindia.com/preview.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta property="og:url" content="https://100waystodieinindia.com/">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="100 Ways to Die in India">
 <meta name="twitter:description" content="These deaths were preventable. Someone chose not to prevent them.">
-<meta name="twitter:image" content="https://images.unsplash.com/photo-1469398715555-76331a6e7b53?w=1200&q=80&auto=format&fit=crop">
+<meta name="twitter:image" content="https://100waystodieinindia.com/preview.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Mono:wght@400;500&family=Barlow+Condensed:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-
 :root {
-  --blood:   #c0180c;
-  --soot:    #0a0909;
-  --bone:    #e8ddd0;
-  --ash:     #1a1818;
-  --muted:   rgba(232,221,208,0.42);
-  --faint:   rgba(232,221,208,0.18);
+  --blood:#c0180c; --soot:#0a0909; --bone:#e8ddd0;
+  --ash:#1a1818; --muted:rgba(232,221,208,0.42); --faint:rgba(232,221,208,0.18);
 }
-
 html { font-size:16px; }
-body {
-  background: var(--soot);
-  color: var(--bone);
-  overflow: hidden;
-  width: 100%; height: 100%;
-  -webkit-tap-highlight-color: transparent;
-}
+body { background:var(--soot); color:var(--bone); overflow:hidden; width:100%; height:100%; -webkit-tap-highlight-color:transparent; }
 
-/* ═══════════════════════════════════
-   LOADING
-═══════════════════════════════════ */
-#loading {
-  position: fixed; inset: 0; z-index: 9999;
-  background: var(--soot);
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center; gap: 18px;
-  transition: opacity 1s ease;
-}
+/* ── LOADING ── */
+#loading { position:fixed; inset:0; z-index:9999; background:var(--soot); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px; transition:opacity 1s ease; }
 #loading.gone { opacity:0; pointer-events:none; }
-.load-title {
-  font-family: 'Playfair Display', serif;
-  font-size: clamp(28px, 7vw, 64px);
-  font-weight: 900; color: var(--bone);
-  text-align: center; letter-spacing: -2px; line-height: 1.05;
-}
-.load-title b { color: var(--blood); font-weight: 900; }
-.load-status {
-  font-family: 'DM Mono', monospace;
-  font-size: 10px; letter-spacing: 3px;
-  color: rgba(192,24,12,0.65); text-transform: uppercase;
-}
-.load-bar-wrap { width: 200px; height: 1px; background: rgba(255,255,255,0.07); }
-.load-bar { height:100%; background: var(--blood); width:0; transition: width 0.45s ease; }
+.load-title { font-family:'Playfair Display',serif; font-size:clamp(28px,7vw,64px); font-weight:900; color:var(--bone); text-align:center; letter-spacing:-2px; line-height:1.05; }
+.load-title b { color:var(--blood); font-weight:900; }
+.load-status { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:3px; color:rgba(192,24,12,0.65); text-transform:uppercase; }
+.load-bar-wrap { width:200px; height:1px; background:rgba(255,255,255,0.07); }
+.load-bar { height:100%; background:var(--blood); width:0; transition:width 0.45s ease; }
 
-/* ═══════════════════════════════════
-   INTRO — Apple scroll story
-═══════════════════════════════════ */
-#intro {
-  position: fixed; inset: 0; z-index: 500;
-  background: var(--soot);
-  display: flex; align-items: center; justify-content: center;
-  transition: opacity 0.8s ease;
-  overflow: hidden;
-}
+/* ── INTRO ── */
+#intro { position:fixed; inset:0; z-index:500; background:var(--soot); display:flex; align-items:center; justify-content:center; transition:opacity 0.8s ease; overflow:hidden; }
 #intro.gone { opacity:0; pointer-events:none; }
-
-#intro-stage {
-  position: relative;
-  width: min(680px, 90vw);
-  min-height: 50vh;
-  display: flex; align-items: center; justify-content: center;
-  text-align: center;
-}
-
-.beat {
-  position: absolute; inset: 0;
-  display: flex; align-items: center; justify-content: center;
-  flex-direction: column; gap: 12px;
-  opacity: 0;
-  transition: opacity 0.6s ease;
-  padding: 0 8px;
-  pointer-events: none;
-}
-.beat.visible { opacity: 1; pointer-events: auto; }
-
-.beat-text {
-  font-family: 'Playfair Display', serif;
-  font-size: clamp(36px, 9vw, 58px);
-  font-weight: 700;
-  line-height: 1.25;
-  color: var(--bone);
-  text-align: center;
-  letter-spacing: -0.5px;
-}
-.beat-text .red { color: var(--blood); font-style: italic; }
-.beat-text .dim { color: rgba(232,221,208,0.38); }
-.beat-text .mono {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.55em; letter-spacing: 3px;
-  text-transform: uppercase; color: rgba(192,24,12,0.55);
-  display: block; margin-bottom: 8px; font-weight: 400;
-}
-
-.beat-sub {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: clamp(16px, 4vw, 20px);
-  color: rgba(232,221,208,0.38);
-  line-height: 1.65; letter-spacing: 0.3px;
-  text-align: center; max-width: 480px;
-  display: none;
-}
-
-.beat-text .word {
-  display: inline;
-  opacity: 0;
-  transform: translateY(6px);
-  transition: opacity 0.35s ease, transform 0.35s ease;
-}
+#intro-stage { position:relative; width:min(680px,90vw); min-height:50vh; display:flex; align-items:center; justify-content:center; text-align:center; }
+.beat { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:12px; opacity:0; transition:opacity 0.6s ease; padding:0 8px; pointer-events:none; }
+.beat.visible { opacity:1; pointer-events:auto; }
+.beat-text { font-family:'Playfair Display',serif; font-size:clamp(36px,9vw,58px); font-weight:700; line-height:1.25; color:var(--bone); text-align:center; letter-spacing:-0.5px; }
+.beat-text .red { color:var(--blood); font-style:italic; }
+.beat-text .mono { font-family:'DM Mono',monospace; font-size:0.55em; letter-spacing:3px; text-transform:uppercase; color:rgba(192,24,12,0.55); display:block; margin-bottom:8px; font-weight:400; }
+.beat-sub { font-family:'Barlow Condensed',sans-serif; font-size:clamp(16px,4vw,20px); color:rgba(232,221,208,0.38); line-height:1.65; letter-spacing:0.3px; text-align:center; max-width:480px; display:none; }
+.beat-text .word { display:inline; opacity:0; transform:translateY(6px); transition:opacity 0.35s ease,transform 0.35s ease; }
 .beat.visible .word { opacity:1; transform:none; }
 
-#intro-dots {
-  position: fixed; bottom: 36px; left: 50%;
-  transform: translateX(-50%);
-  display: flex; gap: 8px; z-index: 600;
-  transition: opacity 0.4s;
+/* Death toll ticker — shown on beat-0 */
+#death-ticker {
+  font-family:'DM Mono',monospace; font-size:clamp(11px,2.5vw,14px);
+  letter-spacing:2px; color:rgba(192,24,12,0.55);
+  margin-top:24px; text-align:center; line-height:1.7;
 }
+#death-ticker b { color:var(--blood); font-size:1.3em; }
+
+#intro-dots { position:fixed; bottom:36px; left:50%; transform:translateX(-50%); display:flex; gap:8px; z-index:600; transition:opacity 0.4s; }
 #intro-dots.gone { opacity:0; pointer-events:none; }
-.dot {
-  width: 5px; height: 5px; border-radius: 50%;
-  background: rgba(232,221,208,0.2);
-  transition: background 0.3s, transform 0.3s;
-}
-.dot.active { background: var(--blood); transform: scale(1.4); }
-
-#intro-hint {
-  position: fixed; bottom: 70px; left: 50%;
-  transform: translateX(-50%);
-  font-family: 'DM Mono', monospace;
-  font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
-  color: rgba(232,221,208,0.2);
-  animation: floatHint 2.5s ease-in-out infinite;
-  z-index: 600; white-space: nowrap;
-  transition: opacity 0.4s;
-}
+.dot { width:5px; height:5px; border-radius:50%; background:rgba(232,221,208,0.2); transition:background 0.3s,transform 0.3s; }
+.dot.active { background:var(--blood); transform:scale(1.4); }
+#intro-hint { position:fixed; bottom:70px; left:50%; transform:translateX(-50%); font-family:'DM Mono',monospace; font-size:9px; letter-spacing:3px; text-transform:uppercase; color:rgba(232,221,208,0.2); animation:floatHint 2.5s ease-in-out infinite; z-index:600; white-space:nowrap; transition:opacity 0.4s; }
 #intro-hint.gone { opacity:0; pointer-events:none; }
-@keyframes floatHint {
-  0%,100% { transform: translateX(-50%) translateY(0); }
-  50%      { transform: translateX(-50%) translateY(-5px); }
-}
-
-.beat-cta {
-  margin-top: 20px;
-  font-family: 'DM Mono', monospace;
-  font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
-  color: rgba(192,24,12,0.5);
-  animation: pulse 2s ease-in-out infinite;
-  cursor: pointer;
-}
+@keyframes floatHint { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(-5px)} }
+.beat-cta { margin-top:20px; font-family:'DM Mono',monospace; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:rgba(192,24,12,0.5); animation:pulse 2s ease-in-out infinite; cursor:pointer; }
 @keyframes pulse { 0%,100%{opacity:0.5} 50%{opacity:1} }
 
-/* ═══════════════════════════════════
-   TOP BAR
-═══════════════════════════════════ */
-#topbar {
-  position: fixed; top:0; left:0; right:0; z-index:200;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 16px clamp(16px, 4vw, 60px);
-  background: linear-gradient(to bottom, rgba(0,0,0,0.88), transparent);
-  pointer-events: none;
-  opacity: 0; transition: opacity 0.6s ease;
-}
-#topbar.show { opacity:1; }
-#topbar-title {
-  font-family: 'DM Mono', monospace;
-  font-size: clamp(8px,1.8vw,10px); letter-spacing: 3px;
-  text-transform: uppercase; color: var(--blood);
-}
+/* ── TOP BAR ── */
+#topbar { position:fixed; top:0; left:0; right:0; z-index:200; display:flex; align-items:center; justify-content:space-between; padding:16px clamp(16px,4vw,60px); background:linear-gradient(to bottom,rgba(0,0,0,0.88),transparent); pointer-events:none; opacity:0; transition:opacity 0.6s ease; }
+#topbar.show { opacity:1; pointer-events:auto; }
+#topbar-title { font-family:'DM Mono',monospace; font-size:clamp(8px,1.8vw,10px); letter-spacing:3px; text-transform:uppercase; color:var(--blood); }
 #topbar-right { display:flex; flex-direction:column; align-items:flex-end; gap:2px; }
-#topbar-counter {
-  font-family: 'DM Mono', monospace;
-  font-size: clamp(8px,1.8vw,10px); letter-spacing: 2px; color: var(--muted);
-}
-#last-updated {
-  font-family: 'DM Mono', monospace;
-  font-size: 8px; letter-spacing: 2px; color: rgba(232,221,208,0.18);
-}
+#topbar-counter { font-family:'DM Mono',monospace; font-size:clamp(8px,1.8vw,10px); letter-spacing:2px; color:var(--muted); }
+#last-updated { font-family:'DM Mono',monospace; font-size:8px; letter-spacing:2px; color:rgba(232,221,208,0.18); }
 
-/* ═══════════════════════════════════
-   PROGRESS BAR
-═══════════════════════════════════ */
-#progressbar {
-  position: fixed; top:0; left:0; right:0; height:2px; z-index:300;
-  background: rgba(192,24,12,0.1);
-  opacity:0; transition: opacity 0.6s;
+/* ── CATEGORY FILTER BAR ── */
+#cat-filter {
+  position:fixed; top:52px; left:0; right:0; z-index:190;
+  display:flex; gap:6px; padding:0 clamp(16px,4vw,60px) 12px;
+  overflow-x:auto; scrollbar-width:none;
+  opacity:0; transition:opacity 0.6s ease;
+  pointer-events:none;
+  -webkit-overflow-scrolling:touch;
 }
+#cat-filter::-webkit-scrollbar { display:none; }
+#cat-filter.show { opacity:1; pointer-events:auto; }
+.cat-btn {
+  font-family:'DM Mono',monospace; font-size:8px; letter-spacing:2px;
+  text-transform:uppercase; white-space:nowrap;
+  padding:4px 10px; border:1px solid rgba(232,221,208,0.12);
+  background:rgba(10,9,9,0.6); color:rgba(232,221,208,0.3);
+  cursor:pointer; transition:all 0.2s; flex-shrink:0;
+  -webkit-appearance:none;
+}
+.cat-btn:hover { color:var(--blood); border-color:rgba(192,24,12,0.4); }
+.cat-btn.active { color:var(--blood); border-color:var(--blood); background:rgba(192,24,12,0.1); }
+
+/* ── PROGRESS BAR ── */
+#progressbar { position:fixed; top:0; left:0; right:0; height:2px; z-index:300; background:rgba(192,24,12,0.1); opacity:0; transition:opacity 0.6s; }
 #progressbar.show { opacity:1; }
 #progressfill { height:100%; background:var(--blood); transition:width 0.5s ease; width:1%; }
 
-/* ═══════════════════════════════════
-   CARDS
-═══════════════════════════════════ */
+/* ── CARDS ── */
 #viewport { position:fixed; inset:0; overflow:hidden; }
-
-.card {
-  position: absolute; inset:0;
-  opacity:0; transform:translateY(100vh);
-  transition: transform 0.75s cubic-bezier(0.77,0,0.18,1), opacity 0.75s ease;
-  will-change: transform, opacity;
-  pointer-events: none; overflow: hidden;
-}
-.card.active {
-  opacity:1; transform:translateY(0);
-  pointer-events:all; z-index:10;
-}
-
-.card-bg {
-  position:absolute; inset:0;
-  background-size:cover; background-position:center center;
-  filter: brightness(0.45) contrast(1.2) saturate(0.5) sepia(0.1);
-  transform: scale(1.06); transition: transform 9s ease;
-}
-.card.active .card-bg { transform: scale(1.0); }
-
-.card-vignette {
-  position:absolute; inset:0;
-  background:
-    radial-gradient(ellipse 90% 70% at 50% 40%, transparent 25%, rgba(0,0,0,0.6) 100%),
-    linear-gradient(to top, rgba(0,0,0,0.98) 0%, rgba(0,0,0,0.55) 42%, rgba(0,0,0,0.08) 72%, rgba(0,0,0,0.35) 100%);
-}
-.card-grain {
-  position:absolute; inset:0; pointer-events:none;
-  opacity:0.18; mix-blend-mode:overlay;
-  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.88' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='0.12'/%3E%3C/svg%3E");
-}
-
+.card { position:absolute; inset:0; opacity:0; transform:translateY(100vh); transition:transform 0.75s cubic-bezier(0.77,0,0.18,1),opacity 0.75s ease; will-change:transform,opacity; pointer-events:none; overflow:hidden; }
+.card.active { opacity:1; transform:translateY(0); pointer-events:all; z-index:10; }
+.card-bg { position:absolute; inset:0; background-size:cover; background-position:center center; filter:brightness(0.45) contrast(1.2) saturate(0.5) sepia(0.1); transform:scale(1.06); transition:transform 9s ease; }
+.card.active .card-bg { transform:scale(1.0); }
+.card-vignette { position:absolute; inset:0; background:radial-gradient(ellipse 90% 70% at 50% 40%,transparent 25%,rgba(0,0,0,0.6) 100%),linear-gradient(to top,rgba(0,0,0,0.98) 0%,rgba(0,0,0,0.55) 42%,rgba(0,0,0,0.08) 72%,rgba(0,0,0,0.35) 100%); }
+.card-grain { position:absolute; inset:0; pointer-events:none; opacity:0.18; mix-blend-mode:overlay; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.88' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='0.12'/%3E%3C/svg%3E"); }
 .cat-bar { position:absolute; top:0; left:0; right:0; height:3px; }
 
-.card-body {
-  position:relative; z-index:10;
-  display:flex; flex-direction:column; justify-content:flex-end;
-  height:100%;
-  padding: 0 clamp(20px,5vw,64px) clamp(52px,9vh,100px);
+/* "On This Day" banner */
+.on-this-day-banner {
+  position:absolute; top:8px; left:50%; transform:translateX(-50%);
+  font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2px;
+  text-transform:uppercase; color:#d4a017;
+  background:rgba(212,160,23,0.1); border:1px solid rgba(212,160,23,0.3);
+  padding:3px 10px; white-space:nowrap; z-index:20;
 }
 
-.case-num {
-  font-family:'Playfair Display',serif;
-  font-size: clamp(64px, 16vw, 160px);
-  font-weight:900; color:rgba(192,24,12,0.07);
-  line-height:1; position:absolute;
-  bottom: clamp(110px,18vh,220px);
-  right: clamp(16px,4vw,52px);
-  letter-spacing:-6px; user-select:none; pointer-events:none;
-}
-
-.card-meta {
-  display:flex; align-items:center; gap:10px;
-  margin-bottom:14px; flex-wrap:wrap;
-}
-.tag-pill {
-  font-family:'DM Mono',monospace;
-  font-size: clamp(7px,1.5vw,9px); letter-spacing:2px; text-transform:uppercase;
-  color:var(--blood); border:1px solid rgba(192,24,12,0.32);
-  padding: 3px 9px;
-}
-.death-date {
-  font-family:'DM Mono',monospace;
-  font-size: clamp(8px,1.6vw,10px); letter-spacing:2px;
-  color:rgba(232,221,208,0.28);
-}
-.publisher-label {
-  font-family:'DM Mono',monospace;
-  font-size: clamp(7px,1.4vw,9px); letter-spacing:1.5px; text-transform:uppercase;
-  color:rgba(232,221,208,0.18);
-  border-left: 1px solid rgba(232,221,208,0.12);
-  padding-left: 10px; margin-left: 2px;
-}
-.latest-badge {
-  font-family:'DM Mono',monospace;
-  font-size: clamp(7px,1.5vw,9px); letter-spacing:2px; text-transform:uppercase;
-  color:#d4a017; border:1px solid rgba(212,160,23,0.38);
-  padding:2px 7px;
-}
-
-.death-headline {
-  font-family:'Playfair Display',serif;
-  font-size: clamp(20px, 4.5vw, 52px);
-  font-weight:700; line-height:1.18;
-  color:var(--bone); margin-bottom:14px;
-  max-width: min(780px, 92vw);
-  text-shadow: 0 3px 24px rgba(0,0,0,0.9);
-  letter-spacing:-0.5px;
-}
+.card-body { position:relative; z-index:10; display:flex; flex-direction:column; justify-content:flex-end; height:100%; padding:0 clamp(20px,5vw,64px) clamp(52px,9vh,100px); }
+.case-num { font-family:'Playfair Display',serif; font-size:clamp(64px,16vw,160px); font-weight:900; color:rgba(192,24,12,0.07); line-height:1; position:absolute; bottom:clamp(110px,18vh,220px); right:clamp(16px,4vw,52px); letter-spacing:-6px; user-select:none; pointer-events:none; }
+.card-meta { display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
+.tag-pill { font-family:'DM Mono',monospace; font-size:clamp(7px,1.5vw,9px); letter-spacing:2px; text-transform:uppercase; color:var(--blood); border:1px solid rgba(192,24,12,0.32); padding:3px 9px; }
+.death-date { font-family:'DM Mono',monospace; font-size:clamp(8px,1.6vw,10px); letter-spacing:2px; color:rgba(232,221,208,0.28); }
+.publisher-label { font-family:'DM Mono',monospace; font-size:clamp(7px,1.4vw,9px); letter-spacing:1.5px; text-transform:uppercase; color:rgba(232,221,208,0.18); border-left:1px solid rgba(232,221,208,0.12); padding-left:10px; margin-left:2px; }
+.latest-badge { font-family:'DM Mono',monospace; font-size:clamp(7px,1.5vw,9px); letter-spacing:2px; text-transform:uppercase; color:#d4a017; border:1px solid rgba(212,160,23,0.38); padding:2px 7px; }
+.death-headline { font-family:'Playfair Display',serif; font-size:clamp(20px,4.5vw,52px); font-weight:700; line-height:1.18; color:var(--bone); margin-bottom:14px; max-width:min(780px,92vw); text-shadow:0 3px 24px rgba(0,0,0,0.9); letter-spacing:-0.5px; }
 .death-headline em { font-style:normal; color:var(--blood); }
-
-.death-body {
-  font-family:'Barlow Condensed',sans-serif;
-  font-size: clamp(12px, 2vw, 16px);
-  line-height:1.62; color:rgba(232,221,208,0.5);
-  max-width: min(580px, 90vw);
-  margin-bottom:24px; letter-spacing:0.2px;
-}
-
+.death-body { font-family:'Barlow Condensed',sans-serif; font-size:clamp(12px,2vw,16px); line-height:1.62; color:rgba(232,221,208,0.5); max-width:min(580px,90vw); margin-bottom:24px; letter-spacing:0.2px; }
 .card-footer { display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
-.source-btn {
-  font-family:'DM Mono',monospace;
-  font-size: clamp(8px,1.6vw,10px); letter-spacing:2px; text-transform:uppercase;
-  color:var(--blood); text-decoration:none;
-  border-bottom:1px solid rgba(192,24,12,0.4); padding-bottom:2px;
-  transition:color 0.2s, border-color 0.2s;
-}
-.source-btn:hover, .source-btn:focus { color:var(--bone); border-color:var(--bone); }
-.count-pill {
-  font-family:'DM Mono',monospace;
-  font-size: clamp(8px,1.6vw,9px); letter-spacing:1px;
-  color:rgba(192,24,12,0.3); margin-left:auto;
-}
+.source-btn { font-family:'DM Mono',monospace; font-size:clamp(8px,1.6vw,10px); letter-spacing:2px; text-transform:uppercase; color:var(--blood); text-decoration:none; border-bottom:1px solid rgba(192,24,12,0.4); padding-bottom:2px; transition:color 0.2s,border-color 0.2s; }
+.source-btn:hover,.source-btn:focus { color:var(--bone); border-color:var(--bone); }
+.count-pill { font-family:'DM Mono',monospace; font-size:clamp(8px,1.6vw,9px); letter-spacing:1px; color:rgba(192,24,12,0.3); margin-left:auto; }
 
-/* ═══════════════════════════════════
-   NAV BUTTONS
-═══════════════════════════════════ */
-#nav {
-  position:fixed; bottom:24px; right:clamp(16px,3.5vw,48px);
-  z-index:200; display:flex; flex-direction:column; gap:7px;
-  opacity:0; transition:opacity 0.6s;
-}
-#nav.show { opacity:1; }
-.navbtn {
-  width:38px; height:38px;
-  background:rgba(10,9,9,0.72);
-  border:1px solid rgba(232,221,208,0.1);
-  color:rgba(232,221,208,0.32);
-  cursor:pointer; font-size:17px;
+/* ── SHARE BUTTON ── */
+.share-btn {
+  width:32px; height:32px;
+  background:transparent; border:1px solid rgba(232,221,208,0.15);
+  color:rgba(232,221,208,0.35); cursor:pointer;
   display:flex; align-items:center; justify-content:center;
-  transition:all 0.2s; font-family:monospace;
+  transition:all 0.2s; flex-shrink:0;
   -webkit-appearance:none;
 }
+.share-btn:hover { border-color:var(--blood); color:var(--blood); }
+.share-btn svg { width:13px; height:13px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+
+/* ── SHARE TOAST ── */
+#share-toast {
+  position:fixed; bottom:80px; left:50%; transform:translateX(-50%);
+  font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2px;
+  text-transform:uppercase; background:rgba(192,24,12,0.9);
+  color:var(--bone); padding:8px 16px; z-index:9000;
+  opacity:0; pointer-events:none; transition:opacity 0.3s; white-space:nowrap;
+}
+#share-toast.show { opacity:1; }
+
+/* ── NAV ── */
+#nav { position:fixed; bottom:24px; right:clamp(16px,3.5vw,48px); z-index:200; display:flex; flex-direction:column; gap:7px; opacity:0; transition:opacity 0.6s; }
+#nav.show { opacity:1; }
+.navbtn { width:38px; height:38px; background:rgba(10,9,9,0.72); border:1px solid rgba(232,221,208,0.1); color:rgba(232,221,208,0.32); cursor:pointer; font-size:17px; display:flex; align-items:center; justify-content:center; transition:all 0.2s; font-family:monospace; -webkit-appearance:none; }
 .navbtn:hover { background:rgba(192,24,12,0.18); border-color:rgba(192,24,12,0.4); color:var(--bone); }
 .navbtn:disabled { opacity:0.12; cursor:default; }
-
-/* ═══════════════════════════════════
-   SWIPE HINT
-═══════════════════════════════════ */
-#swipe-hint {
-  position:fixed; bottom:28px; left:50%; transform:translateX(-50%);
-  z-index:200; font-family:'DM Mono',monospace;
-  font-size:8px; letter-spacing:3px; text-transform:uppercase;
-  color:rgba(232,221,208,0.15);
-  animation:floatHint 2.5s ease-in-out infinite;
-  pointer-events:none; white-space:nowrap;
-  opacity:0; transition:opacity 0.5s;
-}
+#swipe-hint { position:fixed; bottom:28px; left:50%; transform:translateX(-50%); z-index:200; font-family:'DM Mono',monospace; font-size:8px; letter-spacing:3px; text-transform:uppercase; color:rgba(232,221,208,0.15); animation:floatHint 2.5s ease-in-out infinite; pointer-events:none; white-space:nowrap; opacity:0; transition:opacity 0.5s; }
 #swipe-hint.show { opacity:1; }
 #swipe-hint.hidden { opacity:0 !important; }
 
-/* ═══════════════════════════════════
-   ERROR
-═══════════════════════════════════ */
-#error-screen {
-  position:fixed; inset:0; z-index:998;
-  background:var(--soot); display:none;
-  flex-direction:column; align-items:center;
-  justify-content:center; gap:16px;
-  padding:40px; text-align:center;
+/* ── SUBMIT FORM MODAL ── */
+#submit-btn-fixed {
+  position:fixed; bottom:24px; left:clamp(16px,3.5vw,48px);
+  z-index:200; opacity:0; transition:opacity 0.6s;
+  font-family:'DM Mono',monospace; font-size:8px; letter-spacing:2px;
+  text-transform:uppercase; color:rgba(192,24,12,0.4);
+  background:transparent; border:1px solid rgba(192,24,12,0.2);
+  padding:8px 12px; cursor:pointer; -webkit-appearance:none;
+  transition:color 0.2s,border-color 0.2s,opacity 0.6s;
 }
+#submit-btn-fixed.show { opacity:1; }
+#submit-btn-fixed:hover { color:var(--blood); border-color:var(--blood); }
+
+#submit-modal {
+  position:fixed; inset:0; z-index:8000;
+  background:rgba(10,9,9,0.96);
+  display:flex; align-items:center; justify-content:center;
+  padding:24px; opacity:0; pointer-events:none;
+  transition:opacity 0.35s ease;
+}
+#submit-modal.open { opacity:1; pointer-events:auto; }
+
+.submit-box {
+  width:min(480px,100%); display:flex; flex-direction:column; gap:20px;
+}
+.submit-title { font-family:'Playfair Display',serif; font-size:clamp(22px,4vw,32px); font-weight:700; color:var(--bone); }
+.submit-title span { color:var(--blood); }
+.submit-sub { font-family:'Barlow Condensed',sans-serif; font-size:14px; color:rgba(232,221,208,0.4); line-height:1.6; }
+.submit-field { display:flex; flex-direction:column; gap:6px; }
+.submit-label { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:rgba(192,24,12,0.6); }
+.submit-input, .submit-textarea {
+  background:rgba(232,221,208,0.04); border:1px solid rgba(232,221,208,0.1);
+  color:var(--bone); padding:10px 12px;
+  font-family:'Barlow Condensed',sans-serif; font-size:15px;
+  outline:none; transition:border-color 0.2s; width:100%;
+}
+.submit-input:focus,.submit-textarea:focus { border-color:rgba(192,24,12,0.5); }
+.submit-textarea { resize:vertical; min-height:80px; }
+.submit-actions { display:flex; gap:12px; align-items:center; }
+.submit-send {
+  font-family:'DM Mono',monospace; font-size:9px; letter-spacing:3px;
+  text-transform:uppercase; color:var(--bone); background:var(--blood);
+  border:none; padding:12px 20px; cursor:pointer; transition:opacity 0.2s;
+  -webkit-appearance:none;
+}
+.submit-send:hover { opacity:0.85; }
+.submit-send:disabled { opacity:0.4; cursor:default; }
+.submit-cancel { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:rgba(232,221,208,0.25); background:transparent; border:none; cursor:pointer; -webkit-appearance:none; }
+.submit-cancel:hover { color:var(--bone); }
+.submit-status { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:1px; color:rgba(192,24,12,0.7); display:none; }
+.submit-status.show { display:block; }
+
+/* ── ERROR ── */
+#error-screen { position:fixed; inset:0; z-index:998; background:var(--soot); display:none; flex-direction:column; align-items:center; justify-content:center; gap:16px; padding:40px; text-align:center; }
 #error-screen.show { display:flex; }
 .err-title { font-family:'Playfair Display',serif; font-size:clamp(20px,5vw,28px); font-weight:700; color:var(--blood); }
 .err-body { font-family:'Barlow Condensed',sans-serif; font-size:clamp(13px,3vw,15px); color:var(--muted); max-width:400px; line-height:1.7; }
@@ -381,21 +230,21 @@ body {
 </head>
 <body>
 
-<!-- ══ LOADING ══ -->
+<!-- LOADING -->
 <div id="loading">
   <div class="load-title">100 Ways<br>to Die in <b>India</b></div>
   <div class="load-status" id="load-status">Retrieving the dead…</div>
   <div class="load-bar-wrap"><div class="load-bar" id="load-bar"></div></div>
 </div>
 
-<!-- ══ ERROR ══ -->
+<!-- ERROR -->
 <div id="error-screen">
   <div class="err-title">The data couldn't load.</div>
   <div class="err-body">Wait... Don't Die</div>
   <div class="err-code" id="err-detail"></div>
 </div>
 
-<!-- ══ INTRO STORY ══ -->
+<!-- INTRO STORY -->
 <div id="intro">
   <div id="intro-stage">
 
@@ -407,6 +256,10 @@ body {
         <span class="word" style="--i:2"> to </span>
         <span class="word" style="--i:3"><span class="red">Die</span></span>
         <span class="word" style="--i:4"> in India</span>
+      </div>
+      <div id="death-ticker">
+        Since you opened this page,<br>
+        <b id="ticker-count">0</b> Indians have died from preventable causes.
       </div>
     </div>
 
@@ -442,10 +295,10 @@ body {
         <span class="word" style="--i:1"> boat</span>
         <span class="word" style="--i:2"> can</span>
         <span class="word" style="--i:3"> <span class="red">capsize</span></span>
-        <span class="word" style="--i:4"> and</span>
+        <span class="word" style="--i:4"> because</span>
         <span class="word" style="--i:5"> there</span>
-        <span class="word" style="--i:6"> wont</span>
-        <span class="word" style="--i:7"> be</span>
+        <span class="word" style="--i:6"> were</span>
+        <span class="word" style="--i:7"> no</span>
         <span class="word" style="--i:8"> life</span>
         <span class="word" style="--i:9"> jackets.</span>
       </div>
@@ -509,7 +362,8 @@ body {
         <span class="word" style="--i:5"> with</span>
         <span class="word" style="--i:6"> no</span>
         <span class="word" style="--i:7"> equipment,</span>
-        <span class="word" style="--i:8"> <span class="red">choke & die</span>,</span>
+        <span class="word" style="--i:8"> <span class="red">choke</span>,</span>
+        <span class="word" style="--i:9"> die —</span>
       </div>
     </div>
 
@@ -526,28 +380,26 @@ body {
     </div>
 
     <div class="beat" id="beat-9">
-      <div class="beat-text" style="font-size:clamp(44px,11vw,80px); letter-spacing:-2px; line-height:1.05;">
-        <span class="word" style="--i:0"><span class="red">Value</span></span>
-        <span class="word" style="--i:1"> <span class="red">of life</span></span>
-        <span class="word" style="--i:2"> <span class="red">in this country = 0</span></span>
+      <div class="beat-text" style="font-size:clamp(44px,11vw,80px);letter-spacing:-2px;line-height:1.05;">
+        <span class="word" style="--i:0"><span class="red">No</span></span>
+        <span class="word" style="--i:1"> <span class="red">one</span></span>
+        <span class="word" style="--i:2"> <span class="red">cares.</span></span>
       </div>
     </div>
 
     <div class="beat" id="beat-10">
-      <div class="beat-text" style="font-size:clamp(44px,11vw,80px); font-weight:700; color:rgba(232,221,208,0.5); line-height:1.5;">
+      <div class="beat-text" style="font-size:clamp(44px,11vw,80px);font-weight:700;color:rgba(232,221,208,0.5);line-height:1.5;">
         <span class="word" style="--i:0">These</span>
         <span class="word" style="--i:1"> are</span>
         <span class="word" style="--i:2"> not</span>
         <span class="word" style="--i:3"> accidents.</span>
       </div>
-      <div class="beat-text" style="font-size:clamp(44px,11vw,80px); font-weight:700; color:rgba(232,221,208,0.5); margin-top:10px; line-height:1.5;">
+      <div class="beat-text" style="font-size:clamp(44px,11vw,80px);font-weight:700;color:rgba(232,221,208,0.5);margin-top:10px;line-height:1.5;">
         <span class="word" style="--i:4">They</span>
         <span class="word" style="--i:5"> are</span>
         <span class="word" style="--i:6"> <span class="red">decisions.</span></span>
       </div>
-      <div class="beat-cta" id="enter-cta" onclick="enterCases()">
-        Read the cases →
-      </div>
+      <div class="beat-cta" id="enter-cta" onclick="enterCases()">Read the cases →</div>
     </div>
 
   </div>
@@ -556,8 +408,9 @@ body {
 <div id="intro-dots"></div>
 <div id="intro-hint">swipe up or scroll ↑</div>
 
-<!-- ══ CARDS ══ -->
+<!-- CARDS -->
 <div id="progressbar"><div id="progressfill"></div></div>
+
 <div id="topbar">
   <div id="topbar-title">100 Ways to Die in India</div>
   <div id="topbar-right">
@@ -565,12 +418,60 @@ body {
     <div id="last-updated"></div>
   </div>
 </div>
+
+<!-- CATEGORY FILTER -->
+<div id="cat-filter">
+  <button class="cat-btn active" data-cat="all">All</button>
+  <button class="cat-btn" data-cat="fire">🔥 Fire</button>
+  <button class="cat-btn" data-cat="road">🚗 Roads</button>
+  <button class="cat-btn" data-cat="infra">🏗 Infrastructure</button>
+  <button class="cat-btn" data-cat="women">⚠️ Women</button>
+  <button class="cat-btn" data-cat="stampede">👥 Stampede</button>
+  <button class="cat-btn" data-cat="medical">🏥 Medical</button>
+  <button class="cat-btn" data-cat="labour">⚒ Labour</button>
+  <button class="cat-btn" data-cat="student">📚 Education</button>
+  <button class="cat-btn" data-cat="environment">🌊 Environment</button>
+  <button class="cat-btn" data-cat="system">⚖️ System</button>
+</div>
+
 <div id="viewport"></div>
+
 <div id="nav">
   <button class="navbtn" id="btn-up" disabled>↑</button>
   <button class="navbtn" id="btn-down" disabled>↓</button>
 </div>
 <div id="swipe-hint">swipe up · scroll down</div>
+
+<!-- SUBMIT BUTTON -->
+<button id="submit-btn-fixed" onclick="openSubmit()">+ Report a death</button>
+
+<!-- SHARE TOAST -->
+<div id="share-toast">Link copied</div>
+
+<!-- SUBMIT MODAL -->
+<div id="submit-modal">
+  <div class="submit-box">
+    <div class="submit-title">Report a <span>Death</span></div>
+    <div class="submit-sub">Know of an avoidable death caused by negligence or systemic failure? Submit the news link. We review every submission.</div>
+    <div class="submit-field">
+      <div class="submit-label">News article URL *</div>
+      <input class="submit-input" id="sub-url" type="url" placeholder="https://..." autocomplete="off">
+    </div>
+    <div class="submit-field">
+      <div class="submit-label">What happened? (optional)</div>
+      <textarea class="submit-textarea" id="sub-desc" placeholder="Brief description of the incident…"></textarea>
+    </div>
+    <div class="submit-field">
+      <div class="submit-label">Your name or handle (optional)</div>
+      <input class="submit-input" id="sub-name" type="text" placeholder="Anonymous">
+    </div>
+    <div class="submit-actions">
+      <button class="submit-send" id="sub-send" onclick="submitCase()">Submit →</button>
+      <button class="submit-cancel" onclick="closeSubmit()">Cancel</button>
+      <div class="submit-status" id="sub-status"></div>
+    </div>
+  </div>
+</div>
 
 <script>
 /* ═══════════════════════════════
@@ -578,25 +479,48 @@ body {
 ═══════════════════════════════ */
 const SUPABASE_URL      = 'https://lqzzxjnrndnzolxcbwsd.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxxenp4am5ybmRuem9seGNid3NkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2NTIzNDYsImV4cCI6MjA5NjIyODM0Nn0.-lgcRMAbrqnQAhUpA35xXFzyDI9YCJjtDclMys-TnrA';
-const CACHE_HOURS       = 0;
+const CACHE_HOURS       = 1;
+const SITE_URL          = 'https://100waystodieinindia.com';
+
+/*
+ * Death ticker: India's accidental deaths from NCRB.
+ * ~480,000 accidental deaths/year = ~15.2/second
+ * We use road + drowning + fire + electrocution + falls (main preventable causes)
+ * Conservative estimate: ~380,000/year = ~12.04/second
+ */
+const DEATHS_PER_SECOND = 12.04;
 
 /* ═══════════════════════════════
    CONSTANTS
 ═══════════════════════════════ */
 const CAT_COLORS = {
-  fire:        '#c0180c',
-  road:        '#9b4a1e',
-  women:       '#8b0036',
-  student:     '#1a3a6b',
-  infra:       '#1a4020',
-  medical:     '#0d4040',
-  labour:      '#5a3000',
-  stampede:    '#6b4800',
-  system:      '#1a1a2e',
-  environment: '#002a10',
+  fire:'#c0180c', road:'#9b4a1e', women:'#8b0036', student:'#1a3a6b',
+  infra:'#1a4020', medical:'#0d4040', labour:'#5a3000', stampede:'#6b4800',
+  system:'#1a1a2e', environment:'#002a10',
 };
+const TOTAL_BEATS = 11;
 
-const TOTAL_BEATS = 11; // beats 0..10
+/* ═══════════════════════════════
+   DEATH TICKER
+═══════════════════════════════ */
+let tickerStart = null;
+let tickerRAF   = null;
+
+function startTicker() {
+  tickerStart = Date.now();
+  function tick() {
+    const secs    = (Date.now() - tickerStart) / 1000;
+    const count   = Math.floor(secs * DEATHS_PER_SECOND);
+    const el      = document.getElementById('ticker-count');
+    if (el) el.textContent = count.toLocaleString('en-IN');
+    tickerRAF = requestAnimationFrame(tick);
+  }
+  tickerRAF = requestAnimationFrame(tick);
+}
+
+function stopTicker() {
+  if (tickerRAF) cancelAnimationFrame(tickerRAF);
+}
 
 /* ═══════════════════════════════
    INTRO ENGINE
@@ -605,7 +529,6 @@ let beatIdx    = 0;
 let introPhase = true;
 let introLock  = false;
 
-// Build progress dots
 const dotsEl = document.getElementById('intro-dots');
 for (let i = 0; i < TOTAL_BEATS; i++) {
   const d = document.createElement('div');
@@ -617,15 +540,11 @@ function showBeat(idx) {
   document.querySelectorAll('.beat').forEach(b => b.classList.remove('visible'));
   const beat = document.getElementById('beat-' + idx);
   if (!beat) return;
-  // Stagger word transitions
   beat.querySelectorAll('.word').forEach((w, i) => {
     w.style.transitionDelay = (i * 0.055) + 's';
   });
   beat.classList.add('visible');
-  // Update dots
-  document.querySelectorAll('.dot').forEach((d, i) => {
-    d.classList.toggle('active', i === idx);
-  });
+  document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === idx));
   if (idx > 0) document.getElementById('intro-hint').classList.add('gone');
   if (idx === TOTAL_BEATS - 1) document.getElementById('intro-dots').classList.add('gone');
 }
@@ -644,6 +563,7 @@ function advanceBeat(dir) {
 function enterCases() {
   if (!introPhase) return;
   introPhase = false;
+  stopTicker();
   document.getElementById('intro').classList.add('gone');
   document.getElementById('intro-dots').classList.add('gone');
   document.getElementById('intro-hint').classList.add('gone');
@@ -651,91 +571,124 @@ function enterCases() {
   document.getElementById('progressbar').classList.add('show');
   document.getElementById('nav').classList.add('show');
   document.getElementById('swipe-hint').classList.add('show');
+  document.getElementById('cat-filter').classList.add('show');
+  document.getElementById('submit-btn-fixed').classList.add('show');
   if (DEATHS.length > 0) activateCard(0, 1);
 }
 
 /* ═══════════════════════════════
-   DATA & STATE
+   STATE
 ═══════════════════════════════ */
-let DEATHS      = [];
+let DEATHS      = [];   // full dataset from Supabase
+let FILTERED    = [];   // currently displayed (after category filter)
 let current     = 0;
 let cardAnim    = false;
 let touchStartY = null;
 let lastWheel   = 0;
+let activeFilter = 'all';
+
+/* ═══════════════════════════════
+   ON THIS DAY
+   Returns true if today's month+day matches
+   the incident_date of a case
+═══════════════════════════════ */
+function isOnThisDay(incidentDate) {
+  if (!incidentDate) return false;
+  try {
+    const d   = new Date(incidentDate);
+    const now = new Date();
+    return d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+  } catch(e) { return false; }
+}
 
 /* ═══════════════════════════════
    HEADLINE BUILDER
-   Handles newlines from Supabase text fields
-   and wraps em_phrase in <em> for red colour
 ═══════════════════════════════ */
 function buildHeadline(headline, emPhrase) {
   let h = (headline || '')
-    .replace(/\r\n/g, '<br>')
-    .replace(/\r/g,   '<br>')
-    .replace(/\n/g,   '<br>')
-    .replace(/\\n/g,  '<br>')
-    .replace(/  +/g,  '<br>');
-
+    .replace(/\r\n/g,'<br>').replace(/\r/g,'<br>')
+    .replace(/\n/g,'<br>').replace(/\\n/g,'<br>').replace(/  +/g,'<br>');
   if (emPhrase && emPhrase.trim()) {
     const phrase = emPhrase.trim();
-    const esc    = phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    h = h.replace(new RegExp(esc, 'i'), `<em>${phrase}</em>`);
+    const esc    = phrase.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    h = h.replace(new RegExp(esc,'i'), `<em>${phrase}</em>`);
   }
   return h;
+}
+
+/* ═══════════════════════════════
+   SHARE FUNCTION
+═══════════════════════════════ */
+function shareCase(d) {
+  const headline = (d.headline || '').replace(/<[^>]+>/g,'').replace(/\n/g,' ').trim();
+  const text     = `${headline}\n\n${SITE_URL}`;
+  if (navigator.share) {
+    navigator.share({ title:'100 Ways to Die in India', text, url: SITE_URL })
+      .catch(() => {});
+  } else {
+    navigator.clipboard.writeText(text).then(() => {
+      const toast = document.getElementById('share-toast');
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2000);
+    }).catch(() => {});
+  }
 }
 
 /* ═══════════════════════════════
    CARD BUILDER
 ═══════════════════════════════ */
 function buildCard(d, idx, total) {
-  const card = document.createElement('div');
+  const card       = document.createElement('div');
   card.className   = 'card';
   card.dataset.idx = idx;
 
-  const cc     = CAT_COLORS[d.cat] || '#111';
-  // Supabase returns boolean true, not string 'true'
-  const latest = d.is_latest === true || d.is_latest === 'true';
-  const hl     = buildHeadline(d.headline, d.em_phrase);
-  const num    = String(parseInt(d.id) || idx + 1).padStart(2, '0');
+  const cc      = CAT_COLORS[d.cat] || '#111';
+  const latest  = d.is_latest === true || d.is_latest === 'true';
+  const hl      = buildHeadline(d.headline, d.em_phrase);
+  const num     = String(parseInt(d.id) || idx + 1).padStart(2,'0');
+  const onDay   = isOnThisDay(d.incident_date);
 
-  // Ensure Unsplash URLs work as hotlinks from any server
   let imgUrl = d.image_url || '';
-  if (imgUrl.includes('unsplash.com') && !imgUrl.includes('auto=format')) {
+  if (imgUrl.includes('unsplash.com') && !imgUrl.includes('auto=format'))
     imgUrl += (imgUrl.includes('?') ? '&' : '?') + 'auto=format&fit=crop';
-  }
 
-  // Publisher — only show if present and not generic 'Unknown'
-  const pub = (d.publisher && d.publisher !== 'Unknown')
-    ? `<span class="publisher-label">${d.publisher}</span>`
-    : '';
-
-  // Latest badge
+  const pub         = (d.publisher && d.publisher !== 'Unknown')
+    ? `<span class="publisher-label">${d.publisher}</span>` : '';
   const latestBadge = latest ? '<span class="latest-badge">latest</span>' : '';
+  const otdBanner   = onDay
+    ? `<div class="on-this-day-banner">On This Day</div>` : '';
 
   card.innerHTML = `
     <div class="cat-bar" style="background:${cc};opacity:0.6"></div>
     <div class="card-bg" style="background-image:url('${imgUrl}')"></div>
     <div class="card-vignette"></div>
     <div class="card-grain"></div>
+    ${otdBanner}
     <div class="card-body">
       <div class="case-num">${num}</div>
       <div class="card-meta">
-        <span class="tag-pill">${d.tag || 'Systemic Failure'}</span>
-        <span class="death-date">${d.date || ''}</span>
+        <span class="tag-pill">${d.tag||'Systemic Failure'}</span>
+        <span class="death-date">${d.date||''}</span>
         ${pub}
         ${latestBadge}
       </div>
       <div class="death-headline">${hl}</div>
-      <div class="death-body">${d.body || ''}</div>
+      <div class="death-body">${d.body||''}</div>
       <div class="card-footer">
-        <a class="source-btn" href="${d.source_url || '#'}" target="_blank" rel="noopener">Read source →</a>
-        <span class="count-pill">${idx + 1} / ${total}</span>
+        <a class="source-btn" href="${d.source_url||'#'}" target="_blank" rel="noopener">Read source →</a>
+        <button class="share-btn" title="Share this case" onclick="shareCase(FILTERED[${idx}])">
+          <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        </button>
+        <span class="count-pill">${idx+1} / ${total}</span>
       </div>
     </div>`;
 
   return card;
 }
 
+/* ═══════════════════════════════
+   RENDER
+═══════════════════════════════ */
 function renderCards(deaths) {
   const vp = document.getElementById('viewport');
   vp.innerHTML = '';
@@ -743,10 +696,44 @@ function renderCards(deaths) {
 }
 
 /* ═══════════════════════════════
-   CARD NAVIGATION
+   CATEGORY FILTER
 ═══════════════════════════════ */
+function applyFilter(cat) {
+  activeFilter = cat;
+  document.querySelectorAll('.cat-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.cat === cat));
+
+  FILTERED = cat === 'all' ? [...DEATHS] : DEATHS.filter(d => d.cat === cat);
+
+  // Sort "on this day" cases to the top within the filtered set
+  const today = FILTERED.filter(d => isOnThisDay(d.incident_date));
+  const rest  = FILTERED.filter(d => !isOnThisDay(d.incident_date));
+  FILTERED    = [...today, ...rest];
+
+  renderCards(FILTERED);
+  current = 0;
+  updateTopbar();
+
+  // Reactivate first card if we're in cards phase
+  if (!introPhase && FILTERED.length > 0) {
+    activateCard(0, 1);
+  }
+}
+
+/* ═══════════════════════════════
+   NAVIGATION
+═══════════════════════════════ */
+function updateTopbar() {
+  const total = FILTERED.length;
+  const label = activeFilter === 'all' ? `${String(current+1).padStart(3,'0')} / ${total}` : `${current+1} / ${total} · ${activeFilter}`;
+  document.getElementById('topbar-counter').textContent = label;
+  document.getElementById('progressfill').style.width = `${((current+1)/total)*100}%`;
+  document.getElementById('btn-up').disabled   = current === 0;
+  document.getElementById('btn-down').disabled = current === total - 1;
+}
+
 function activateCard(idx, dir) {
-  if (cardAnim || idx < 0 || idx >= DEATHS.length) return;
+  if (cardAnim || idx < 0 || idx >= FILTERED.length) return;
   cardAnim = true;
 
   const vp   = document.getElementById('viewport');
@@ -755,7 +742,7 @@ function activateCard(idx, dir) {
     prev.classList.remove('active');
     prev.style.transform = dir > 0 ? 'translateY(-100vh)' : 'translateY(100vh)';
     prev.style.opacity   = '0';
-    setTimeout(() => { prev.style.transform = ''; prev.style.opacity = ''; }, 820);
+    setTimeout(() => { prev.style.transform=''; prev.style.opacity=''; }, 820);
   }
 
   const next = vp.querySelector(`[data-idx="${idx}"]`);
@@ -772,15 +759,8 @@ function activateCard(idx, dir) {
   }));
 
   current = idx;
-  const total = DEATHS.length;
-  document.getElementById('topbar-counter').textContent =
-    `${String(current + 1).padStart(3, '0')} / ${total}`;
-  document.getElementById('progressfill').style.width =
-    `${((current + 1) / total) * 100}%`;
-  document.getElementById('btn-up').disabled   = current === 0;
-  document.getElementById('btn-down').disabled = current === total - 1;
+  updateTopbar();
   if (current > 0) document.getElementById('swipe-hint').classList.add('hidden');
-
   setTimeout(() => { cardAnim = false; }, 820);
 }
 
@@ -789,25 +769,22 @@ function activateCard(idx, dir) {
 ═══════════════════════════════ */
 function getCached() {
   try {
-    const raw = localStorage.getItem('deaths_v5');
+    const raw = localStorage.getItem('deaths_v6');
     if (!raw) return null;
     const { ts, data } = JSON.parse(raw);
     if (Date.now() - ts > CACHE_HOURS * 3600000) return null;
     return data;
   } catch(e) { return null; }
 }
-
 function setCache(data) {
   try {
-    localStorage.setItem('deaths_v5', JSON.stringify({ ts: Date.now(), data }));
-    localStorage.setItem('deaths_v5_ts', new Date().toISOString());
+    localStorage.setItem('deaths_v6', JSON.stringify({ ts:Date.now(), data }));
+    localStorage.setItem('deaths_v6_ts', new Date().toISOString());
   } catch(e) {}
 }
 
 /* ═══════════════════════════════
    SUPABASE FETCH
-   Orders by rank ASC (best cases first),
-   falls back to id ASC for unranked rows
 ═══════════════════════════════ */
 async function fetchDeaths() {
   const cached = getCached();
@@ -818,30 +795,93 @@ async function fetchDeaths() {
   }
 
   setLoadStatus('Fetching cases…', 40);
-
   const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/deaths?select=*&order=rank.asc.nullslast,id.asc`,
-    {
-      headers: {
-        apikey:        SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-      }
-    }
+    `${SUPABASE_URL}/rest/v1/deaths?select=*&order=incident_date.desc.nullslast,id.desc`,
+    { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
   );
 
   if (!res.ok) {
     const body = await res.text();
-    throw new Error(`Supabase HTTP ${res.status}: ${body.substring(0, 200)}`);
+    throw new Error(`Supabase HTTP ${res.status}: ${body.substring(0,200)}`);
   }
 
   const data = await res.json();
-  if (!Array.isArray(data) || data.length === 0) {
-    throw new Error('No cases found in database. Check your Supabase table and RLS policy.');
-  }
+  if (!Array.isArray(data) || data.length === 0)
+    throw new Error('No cases found. Check your Supabase table and RLS policy.');
 
   setLoadStatus('Rendering…', 85);
   setCache(data);
   return data;
+}
+
+/* ═══════════════════════════════
+   SUBMIT A CASE
+═══════════════════════════════ */
+function openSubmit() {
+  document.getElementById('submit-modal').classList.add('open');
+  document.getElementById('sub-url').focus();
+}
+function closeSubmit() {
+  document.getElementById('submit-modal').classList.remove('open');
+  document.getElementById('sub-status').classList.remove('show');
+  document.getElementById('sub-status').textContent = '';
+}
+
+async function submitCase() {
+  const url  = document.getElementById('sub-url').value.trim();
+  const desc = document.getElementById('sub-desc').value.trim();
+  const name = document.getElementById('sub-name').value.trim() || 'Anonymous';
+  const btn  = document.getElementById('sub-send');
+  const stat = document.getElementById('sub-status');
+
+  if (!url || !url.startsWith('http')) {
+    stat.textContent = 'Please enter a valid URL starting with https://';
+    stat.classList.add('show');
+    return;
+  }
+
+  btn.disabled       = true;
+  btn.textContent    = 'Submitting…';
+  stat.classList.remove('show');
+
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/submissions`, {
+      method: 'POST',
+      headers: {
+        apikey:        SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type':'application/json',
+        Prefer:        'return=minimal',
+      },
+      body: JSON.stringify({
+        url,
+        description: desc,
+        submitted_by: name,
+        submitted_at: new Date().toISOString(),
+        status: 'pending',
+      })
+    });
+
+    if (res.ok || res.status === 201) {
+      stat.textContent = '✓ Submitted. We review every case.';
+      stat.style.color = 'rgba(80,200,80,0.8)';
+      stat.classList.add('show');
+      document.getElementById('sub-url').value  = '';
+      document.getElementById('sub-desc').value = '';
+      document.getElementById('sub-name').value = '';
+      setTimeout(closeSubmit, 2500);
+    } else {
+      const body = await res.text();
+      throw new Error(`HTTP ${res.status}: ${body.substring(0,100)}`);
+    }
+  } catch(err) {
+    stat.textContent = `Error: ${err.message}`;
+    stat.style.color = 'rgba(192,24,12,0.8)';
+    stat.classList.add('show');
+  } finally {
+    btn.disabled    = false;
+    btn.textContent = 'Submit →';
+  }
 }
 
 /* ═══════════════════════════════
@@ -854,21 +894,27 @@ async function boot() {
   try {
     DEATHS = await fetchDeaths();
     setLoadStatus(`${DEATHS.length} cases loaded.`, 95);
-    renderCards(DEATHS);
+
+    // Apply initial filter (all, but "on this day" cases floated to top)
+    FILTERED = [...DEATHS];
+    const today = FILTERED.filter(d => isOnThisDay(d.incident_date));
+    const rest  = FILTERED.filter(d => !isOnThisDay(d.incident_date));
+    FILTERED    = [...today, ...rest];
+
+    renderCards(FILTERED);
     await sleep(350);
 
-    // Show last-fetched timestamp
-    const ts = localStorage.getItem('deaths_v5_ts');
+    const ts = localStorage.getItem('deaths_v6_ts');
     if (ts) {
       document.getElementById('last-updated').textContent =
-        'updated ' + new Date(ts).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+        'updated ' + new Date(ts).toLocaleDateString('en-IN',{day:'numeric',month:'short'});
     }
 
     document.getElementById('loading').classList.add('gone');
-    setTimeout(() => {
-      try { document.getElementById('loading').remove(); } catch(e) {}
-    }, 1200);
+    setTimeout(() => { try{ document.getElementById('loading').remove(); }catch(e){} }, 1200);
 
+    // Start death ticker and show intro
+    startTicker();
     showBeat(0);
 
   } catch(err) {
@@ -879,58 +925,66 @@ async function boot() {
   }
 }
 
-function setLoadStatus(msg, pct) {
+function setLoadStatus(msg,pct) {
   document.getElementById('load-status').textContent = msg;
   document.getElementById('load-bar').style.width    = pct + '%';
 }
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+function sleep(ms) { return new Promise(r => setTimeout(r,ms)); }
 
 /* ═══════════════════════════════
-   UNIFIED INPUT
-   Intro phase  → advance beats
-   Cards phase  → navigate cards
+   CATEGORY FILTER BUTTONS
 ═══════════════════════════════ */
-function handleNext() {
-  if (introPhase) advanceBeat(1);
-  else activateCard(current + 1, 1);
-}
-function handlePrev() {
-  if (introPhase) advanceBeat(-1);
-  else activateCard(current - 1, -1);
-}
+document.querySelectorAll('.cat-btn').forEach(btn => {
+  btn.addEventListener('click', () => applyFilter(btn.dataset.cat));
+});
 
-document.getElementById('btn-up').addEventListener('click',   () => activateCard(current - 1, -1));
-document.getElementById('btn-down').addEventListener('click', () => activateCard(current + 1,  1));
+/* ═══════════════════════════════
+   INPUT HANDLERS
+═══════════════════════════════ */
+function handleNext() { if (introPhase) advanceBeat(1); else activateCard(current+1,1); }
+function handlePrev() { if (introPhase) advanceBeat(-1); else activateCard(current-1,-1); }
+
+document.getElementById('btn-up').addEventListener('click',   () => activateCard(current-1,-1));
+document.getElementById('btn-down').addEventListener('click', () => activateCard(current+1,1));
 
 document.addEventListener('keydown', e => {
-  if (['ArrowDown', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); handleNext(); }
-  if (['ArrowUp',   'PageUp'       ].includes(e.key)) { e.preventDefault(); handlePrev(); }
-  if (e.key === 'Enter' && introPhase) handleNext();
+  if (document.getElementById('submit-modal').classList.contains('open')) return;
+  if (['ArrowDown','PageDown',' '].includes(e.key)) { e.preventDefault(); handleNext(); }
+  if (['ArrowUp','PageUp'].includes(e.key))         { e.preventDefault(); handlePrev(); }
+  if (e.key === 'Enter' && introPhase)               handleNext();
+  if (e.key === 'Escape') closeSubmit();
 });
 
 document.addEventListener('wheel', e => {
+  if (document.getElementById('submit-modal').classList.contains('open')) return;
   const now = Date.now();
   if (now - lastWheel < 800) return;
   lastWheel = now;
   if      (e.deltaY >  25) handleNext();
   else if (e.deltaY < -25) handlePrev();
-}, { passive: true });
+}, { passive:true });
 
 document.addEventListener('touchstart', e => {
+  if (document.getElementById('submit-modal').classList.contains('open')) return;
   touchStartY = e.touches[0].clientY;
-}, { passive: true });
+}, { passive:true });
 
 document.addEventListener('touchend', e => {
   if (touchStartY === null) return;
+  if (document.getElementById('submit-modal').classList.contains('open')) return;
   const dy = touchStartY - e.changedTouches[0].clientY;
   if (Math.abs(dy) > 50) dy > 0 ? handleNext() : handlePrev();
   touchStartY = null;
-}, { passive: true });
+}, { passive:true });
 
-// Tap anywhere on intro stage to advance (mobile)
 document.getElementById('intro').addEventListener('click', e => {
   if (e.target.id === 'enter-cta' || e.target.closest('#enter-cta')) return;
   if (introPhase) advanceBeat(1);
+});
+
+// Close modal on backdrop click
+document.getElementById('submit-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('submit-modal')) closeSubmit();
 });
 
 boot();

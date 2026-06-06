@@ -1046,17 +1046,27 @@ jobs:
             delete_all_rows()
             time.sleep(1)
 
-            for rank_idx, case in enumerate(top_cases):
-              row = build_row(
-                case,
-                row_id   = rank_idx + 1,
-                rank     = rank_idx + 1,
-                is_latest = (rank_idx == 0)
-              )
-              insert_row(row)
-              time.sleep(0.08)
+        # Find the case with the most recent incident_date to mark as latest
+          def parse_incident_date(case):
+            d = case.get('incident_date') or ''
+            try:
+              return datetime.date.fromisoformat(str(d))
+            except:
+              return datetime.date.min
 
-            print(f'\n✓ Refresh100 complete. {len(top_cases)} cases in database.')
+          most_recent = max(top_cases, key=parse_incident_date)
+          most_recent_source = most_recent.get('source_url', '')
+
+          for rank_idx, case in enumerate(top_cases):
+            is_latest = (case.get('source_url', '') == most_recent_source)
+            row = build_row(
+              case,
+              row_id    = rank_idx + 1,
+              rank      = rank_idx + 1,
+              is_latest = is_latest
+            )
+            insert_row(row)
+            time.sleep(0.08)            print(f'\n✓ Refresh100 complete. {len(top_cases)} cases in database.')
 
             # Print category breakdown
             from collections import Counter
