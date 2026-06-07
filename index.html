@@ -7,7 +7,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23000000'/></svg>">
 <meta property="og:title" content="100 Ways to Die in India">
 <meta property="og:description" content="These deaths were preventable. Someone chose not to prevent them.">
-<meta property="og:image" content="https://100waystodieinindia.com/preview.jpg">
+<meta property="og:image" content="https://100waystodieinindia.com/preview.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:url" content="https://100waystodieinindia.com/">
@@ -15,7 +15,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="100 Ways to Die in India">
 <meta name="twitter:description" content="These deaths were preventable. Someone chose not to prevent them.">
-<meta name="twitter:image" content="https://100waystodieinindia.com/preview.jpg">
+<meta name="twitter:image" content="https://100waystodieinindia.com/preview.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Mono:wght@400;500&family=Barlow+Condensed:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -23,6 +23,9 @@
 :root {
   --blood:#c0180c; --soot:#0a0909; --bone:#e8ddd0;
   --ash:#1a1818; --muted:rgba(232,221,208,0.42); --faint:rgba(232,221,208,0.18);
+  /* FIX: single source of truth for animation duration */
+  --card-dur: 0.55s;
+  --card-ease: cubic-bezier(0.77,0,0.18,1);
 }
 html { font-size:16px; }
 body { background:var(--soot); color:var(--bone); overflow:hidden; width:100%; height:100%; -webkit-tap-highlight-color:transparent; }
@@ -49,7 +52,7 @@ body { background:var(--soot); color:var(--bone); overflow:hidden; width:100%; h
 .beat-text .word { display:inline; opacity:0; transform:translateY(6px); transition:opacity 0.35s ease,transform 0.35s ease; }
 .beat.visible .word { opacity:1; transform:none; }
 
-/* Death toll ticker — shown on beat-0 */
+/* Death toll ticker */
 #death-ticker {
   font-family:'DM Mono',monospace; font-size:clamp(11px,2.5vw,14px);
   letter-spacing:2px; color:rgba(192,24,12,0.55);
@@ -100,11 +103,17 @@ body { background:var(--soot); color:var(--bone); overflow:hidden; width:100%; h
 /* ── PROGRESS BAR ── */
 #progressbar { position:fixed; top:0; left:0; right:0; height:2px; z-index:300; background:rgba(192,24,12,0.1); opacity:0; transition:opacity 0.6s; }
 #progressbar.show { opacity:1; }
-#progressfill { height:100%; background:var(--blood); transition:width 0.5s ease; width:1%; }
+/* FIX: match card transition duration */
+#progressfill { height:100%; background:var(--blood); transition:width var(--card-dur) ease; width:1%; }
 
 /* ── CARDS ── */
 #viewport { position:fixed; inset:0; overflow:hidden; }
-.card { position:absolute; inset:0; opacity:0; transform:translateY(100vh); transition:transform 0.75s cubic-bezier(0.77,0,0.18,1),opacity 0.75s ease; will-change:transform,opacity; pointer-events:none; overflow:hidden; }
+/* FIX: faster + smoother card transition using CSS vars */
+.card {
+  position:absolute; inset:0; opacity:0; transform:translateY(100vh);
+  transition:transform var(--card-dur) var(--card-ease), opacity var(--card-dur) ease;
+  will-change:transform,opacity; pointer-events:none; overflow:hidden;
+}
 .card.active { opacity:1; transform:translateY(0); pointer-events:all; z-index:10; }
 .card-bg { position:absolute; inset:0; background-size:cover; background-position:center center; filter:brightness(0.45) contrast(1.2) saturate(0.5) sepia(0.1); transform:scale(1.06); transition:transform 9s ease; }
 .card.active .card-bg { transform:scale(1.0); }
@@ -171,7 +180,7 @@ body { background:var(--soot); color:var(--bone); overflow:hidden; width:100%; h
 /* ── SUBMIT FORM MODAL ── */
 #submit-btn-fixed {
   position:fixed; bottom:24px; left:clamp(16px,3.5vw,48px);
-  z-index:200; opacity:0; transition:opacity 0.6s;
+  z-index:200; opacity:0;
   font-family:'DM Mono',monospace; font-size:8px; letter-spacing:2px;
   text-transform:uppercase; color:rgba(192,24,12,0.4);
   background:transparent; border:1px solid rgba(192,24,12,0.2);
@@ -189,10 +198,7 @@ body { background:var(--soot); color:var(--bone); overflow:hidden; width:100%; h
   transition:opacity 0.35s ease;
 }
 #submit-modal.open { opacity:1; pointer-events:auto; }
-
-.submit-box {
-  width:min(480px,100%); display:flex; flex-direction:column; gap:20px;
-}
+.submit-box { width:min(480px,100%); display:flex; flex-direction:column; gap:20px; }
 .submit-title { font-family:'Playfair Display',serif; font-size:clamp(22px,4vw,32px); font-weight:700; color:var(--bone); }
 .submit-title span { color:var(--blood); }
 .submit-sub { font-family:'Barlow Condensed',sans-serif; font-size:14px; color:rgba(232,221,208,0.4); line-height:1.6; }
@@ -226,6 +232,16 @@ body { background:var(--soot); color:var(--bone); overflow:hidden; width:100%; h
 .err-title { font-family:'Playfair Display',serif; font-size:clamp(20px,5vw,28px); font-weight:700; color:var(--blood); }
 .err-body { font-family:'Barlow Condensed',sans-serif; font-size:clamp(13px,3vw,15px); color:var(--muted); max-width:400px; line-height:1.7; }
 .err-code { font-family:'DM Mono',monospace; font-size:10px; color:rgba(192,24,12,0.45); letter-spacing:1px; margin-top:8px; word-break:break-all; max-width:380px; }
+
+/* ── KEYBOARD HINT ── */
+#kb-hint {
+  position:fixed; bottom:28px; right:clamp(16px,3.5vw,48px);
+  font-family:'DM Mono',monospace; font-size:8px; letter-spacing:2px;
+  text-transform:uppercase; color:rgba(232,221,208,0.1);
+  z-index:200; opacity:0; transition:opacity 0.5s;
+  pointer-events:none;
+}
+#kb-hint.show { opacity:1; }
 </style>
 </head>
 <body>
@@ -385,12 +401,12 @@ body { background:var(--soot); color:var(--bone); overflow:hidden; width:100%; h
         <span class="word" style="--i:1"> <span class="red">one</span></span>
         <span class="word" style="--i:2"> <span class="red">cares.</span></span>
       </div>
-    </div>
       <div class="beat-text" style="font-size:clamp(44px,11vw,80px);font-weight:700;color:rgba(232,221,208,0.5);margin-top:10px;line-height:1.5;">
         <span class="word" style="--i:4">Value of</span>
         <span class="word" style="--i:5"> life in India is</span>
         <span class="word" style="--i:6"> <span class="red">ZERO...</span></span>
       </div>
+    </div>
 
     <div class="beat" id="beat-10">
       <div class="beat-text" style="font-size:clamp(44px,11vw,80px);font-weight:700;color:rgba(232,221,208,0.5);line-height:1.5;">
@@ -446,6 +462,7 @@ body { background:var(--soot); color:var(--bone); overflow:hidden; width:100%; h
   <button class="navbtn" id="btn-down" disabled>↓</button>
 </div>
 <div id="swipe-hint">swipe up · scroll down</div>
+<div id="kb-hint">↑ ↓ to navigate</div>
 
 <!-- SUBMIT BUTTON -->
 <button id="submit-btn-fixed" onclick="openSubmit()">+ Report a death</button>
@@ -487,13 +504,14 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const CACHE_HOURS       = 1;
 const SITE_URL          = 'https://100waystodieinindia.com';
 
-/*
- * Death ticker: India's accidental deaths from NCRB.
- * ~480,000 accidental deaths/year = ~15.2/second
- * We use road + drowning + fire + electrocution + falls (main preventable causes)
- * Conservative estimate: ~380,000/year = ~12.04/second
- */
+// ~380,000 preventable accidental deaths/year = ~12.04/second
 const DEATHS_PER_SECOND = 12.04;
+
+// FIX: match JS animation lock to CSS --card-dur (550ms)
+const CARD_DUR_MS = 550;
+
+// FIX: wheel debounce reduced from 800ms → 600ms (fast enough, no accidental double-skip)
+const WHEEL_DEBOUNCE_MS = 600;
 
 /* ═══════════════════════════════
    CONSTANTS
@@ -514,9 +532,9 @@ let tickerRAF   = null;
 function startTicker() {
   tickerStart = Date.now();
   function tick() {
-    const secs    = (Date.now() - tickerStart) / 1000;
-    const count   = Math.floor(secs * DEATHS_PER_SECOND);
-    const el      = document.getElementById('ticker-count');
+    const secs  = (Date.now() - tickerStart) / 1000;
+    const count = Math.floor(secs * DEATHS_PER_SECOND);
+    const el    = document.getElementById('ticker-count');
     if (el) el.textContent = count.toLocaleString('en-IN');
     tickerRAF = requestAnimationFrame(tick);
   }
@@ -584,18 +602,19 @@ function enterCases() {
 /* ═══════════════════════════════
    STATE
 ═══════════════════════════════ */
-let DEATHS      = [];   // full dataset from Supabase
-let FILTERED    = [];   // currently displayed (after category filter)
+let DEATHS      = [];
+let FILTERED    = [];
 let current     = 0;
 let cardAnim    = false;
 let touchStartY = null;
+let touchStartX = null;
 let lastWheel   = 0;
 let activeFilter = 'all';
+// FIX: track if user has ever used a keyboard so we can show the hint
+let hasUsedTouch = false;
 
 /* ═══════════════════════════════
    ON THIS DAY
-   Returns true if today's month+day matches
-   the incident_date of a case
 ═══════════════════════════════ */
 function isOnThisDay(incidentDate) {
   if (!incidentDate) return false;
@@ -710,7 +729,6 @@ function applyFilter(cat) {
 
   FILTERED = cat === 'all' ? [...DEATHS] : DEATHS.filter(d => d.cat === cat);
 
-  // Sort "on this day" cases to the top within the filtered set
   const today = FILTERED.filter(d => isOnThisDay(d.incident_date));
   const rest  = FILTERED.filter(d => !isOnThisDay(d.incident_date));
   FILTERED    = [...today, ...rest];
@@ -719,7 +737,6 @@ function applyFilter(cat) {
   current = 0;
   updateTopbar();
 
-  // Reactivate first card if we're in cards phase
   if (!introPhase && FILTERED.length > 0) {
     activateCard(0, 1);
   }
@@ -730,7 +747,9 @@ function applyFilter(cat) {
 ═══════════════════════════════ */
 function updateTopbar() {
   const total = FILTERED.length;
-  const label = activeFilter === 'all' ? `${String(current+1).padStart(3,'0')} / ${total}` : `${current+1} / ${total} · ${activeFilter}`;
+  const label = activeFilter === 'all'
+    ? `${String(current+1).padStart(3,'0')} / ${total}`
+    : `${current+1} / ${total} · ${activeFilter}`;
   document.getElementById('topbar-counter').textContent = label;
   document.getElementById('progressfill').style.width = `${((current+1)/total)*100}%`;
   document.getElementById('btn-up').disabled   = current === 0;
@@ -747,7 +766,8 @@ function activateCard(idx, dir) {
     prev.classList.remove('active');
     prev.style.transform = dir > 0 ? 'translateY(-100vh)' : 'translateY(100vh)';
     prev.style.opacity   = '0';
-    setTimeout(() => { prev.style.transform=''; prev.style.opacity=''; }, 820);
+    // FIX: cleanup timeout matches CARD_DUR_MS + small buffer
+    setTimeout(() => { prev.style.transform=''; prev.style.opacity=''; }, CARD_DUR_MS + 80);
   }
 
   const next = vp.querySelector(`[data-idx="${idx}"]`);
@@ -766,7 +786,8 @@ function activateCard(idx, dir) {
   current = idx;
   updateTopbar();
   if (current > 0) document.getElementById('swipe-hint').classList.add('hidden');
-  setTimeout(() => { cardAnim = false; }, 820);
+  // FIX: unlock after animation completes, matches CARD_DUR_MS
+  setTimeout(() => { cardAnim = false; }, CARD_DUR_MS + 80);
 }
 
 /* ═══════════════════════════════
@@ -900,7 +921,6 @@ async function boot() {
     DEATHS = await fetchDeaths();
     setLoadStatus(`${DEATHS.length} cases loaded.`, 95);
 
-    // Apply initial filter (all, but "on this day" cases floated to top)
     FILTERED = [...DEATHS];
     const today = FILTERED.filter(d => isOnThisDay(d.incident_date));
     const rest  = FILTERED.filter(d => !isOnThisDay(d.incident_date));
@@ -918,7 +938,6 @@ async function boot() {
     document.getElementById('loading').classList.add('gone');
     setTimeout(() => { try{ document.getElementById('loading').remove(); }catch(e){} }, 1200);
 
-    // Start death ticker and show intro
     startTicker();
     showBeat(0);
 
@@ -958,28 +977,45 @@ document.addEventListener('keydown', e => {
   if (['ArrowUp','PageUp'].includes(e.key))         { e.preventDefault(); handlePrev(); }
   if (e.key === 'Enter' && introPhase)               handleNext();
   if (e.key === 'Escape') closeSubmit();
+
+  // FIX: show keyboard hint on first keypress, then show kb-hint
+  if (!hasUsedTouch && !introPhase) {
+    document.getElementById('kb-hint').classList.add('show');
+  }
 });
 
+// FIX: wheel — reduced debounce, better threshold discrimination
 document.addEventListener('wheel', e => {
   if (document.getElementById('submit-modal').classList.contains('open')) return;
   const now = Date.now();
-  if (now - lastWheel < 800) return;
+  if (now - lastWheel < WHEEL_DEBOUNCE_MS) return;
+  // FIX: raise threshold slightly to avoid accidental skips on trackpads
+  if (Math.abs(e.deltaY) < 40) return;
   lastWheel = now;
-  if      (e.deltaY >  25) handleNext();
-  else if (e.deltaY < -25) handlePrev();
+  if      (e.deltaY > 0) handleNext();
+  else if (e.deltaY < 0) handlePrev();
 }, { passive:true });
 
+// FIX: touch — track horizontal swipe too, ignore horizontal-dominant swipes
 document.addEventListener('touchstart', e => {
   if (document.getElementById('submit-modal').classList.contains('open')) return;
   touchStartY = e.touches[0].clientY;
+  touchStartX = e.touches[0].clientX;
+  hasUsedTouch = true;
+  document.getElementById('kb-hint').classList.remove('show');
 }, { passive:true });
 
 document.addEventListener('touchend', e => {
   if (touchStartY === null) return;
   if (document.getElementById('submit-modal').classList.contains('open')) return;
   const dy = touchStartY - e.changedTouches[0].clientY;
-  if (Math.abs(dy) > 50) dy > 0 ? handleNext() : handlePrev();
+  const dx = touchStartX - e.changedTouches[0].clientX;
+  // FIX: only trigger if vertical swipe dominates (not accidental horizontal scroll)
+  if (Math.abs(dy) > 45 && Math.abs(dy) > Math.abs(dx) * 1.5) {
+    dy > 0 ? handleNext() : handlePrev();
+  }
   touchStartY = null;
+  touchStartX = null;
 }, { passive:true });
 
 document.getElementById('intro').addEventListener('click', e => {
@@ -987,7 +1023,6 @@ document.getElementById('intro').addEventListener('click', e => {
   if (introPhase) advanceBeat(1);
 });
 
-// Close modal on backdrop click
 document.getElementById('submit-modal').addEventListener('click', e => {
   if (e.target === document.getElementById('submit-modal')) closeSubmit();
 });
