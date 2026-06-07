@@ -2,7 +2,7 @@ name: Daily Death Update
 
 on:
   schedule:
-    - cron: '30 0 * * *'  # 11 PM IST = 5:30 PM UTC
+    - cron: '30 5 * * *'  # 11 PM IST = 5:30 PM UTC
   workflow_dispatch:
     inputs:
       mode:
@@ -67,7 +67,6 @@ jobs:
           ]
 
           # ── HISTORICAL queries (last 12 months) — for refresh100 ──────────
-          # These are targeted at specific high-profile known cases + broad sweeps
           HISTORICAL_QUERIES = [
             # Specific known high-profile incidents
             'Morbi bridge collapse 2022 Gujarat 141 dead',
@@ -177,12 +176,6 @@ jobs:
           # ═══════════════════════════════════════════════════════════════════
 
           def http_get(url, headers=None, timeout=12, follow_google_redirect=False):
-            """
-            GET request. Returns (body_str, final_url) or (None, None).
-            If follow_google_redirect=True, resolves Google News redirect URLs
-            to get the actual article URL before fetching.
-            """
-            # Resolve Google News redirect URLs first
             if follow_google_redirect and 'news.google.com' in url:
               url = resolve_google_news_url(url)
 
@@ -205,18 +198,13 @@ jobs:
               return None, None
 
           def resolve_google_news_url(google_url):
-            """
-            Google News URLs redirect through news.google.com/articles/...
-            We follow the redirect chain to get the real article URL.
-            """
             try:
               req = urllib.request.Request(google_url, headers={
                 'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'
               })
-              # Don't follow redirects — we just want the Location header
               opener = urllib.request.build_opener(urllib.request.HTTPRedirectHandler())
               with opener.open(req, timeout=8) as r:
-                return r.url  # final URL after redirects
+                return r.url
             except urllib.error.HTTPError as e:
               if e.code in (301, 302, 307, 308):
                 location = e.headers.get('Location', '')
@@ -224,10 +212,9 @@ jobs:
                   return location
             except Exception:
               pass
-            return google_url  # fallback to original
+            return google_url
 
           def supabase_req(method, path, payload=None):
-            """Supabase REST API call. Returns parsed JSON or None."""
             url  = BASE_URL + '/rest/v1/' + path
             data = json.dumps(payload).encode() if payload is not None else None
             req  = urllib.request.Request(url, data=data, method=method, headers={
@@ -246,21 +233,16 @@ jobs:
               return None
 
           # ═══════════════════════════════════════════════════════════════════
-          # SERPER API  — news search + image search
+          # SERPER API
           # ═══════════════════════════════════════════════════════════════════
 
           def serper_news_search(query, num=10, date_range=None):
-            """
-            Search Google News via Serper API.
-            date_range: None (no filter), 'd3' (3 days), 'w' (week), 'm' (month), 'y' (year)
-            Returns list of {title, url, snippet, source, date} dicts.
-            """
             if not SERPER_KEY:
               return []
 
             payload = {'q': query, 'num': num, 'gl': 'in', 'hl': 'en'}
             if date_range:
-              payload['tbs'] = f'qdr:{date_range}'  # qdr:d3=3days, qdr:y=year, qdr:m=month
+              payload['tbs'] = f'qdr:{date_range}'
 
             data = json.dumps(payload).encode()
             req  = urllib.request.Request(
@@ -292,11 +274,6 @@ jobs:
               return []
 
           def serper_image_search(query, num=5):
-            """
-            Search for images via Serper API.
-            Returns list of image URLs (direct, not Google-proxied).
-            Filters out Google thumbnails and tiny images.
-            """
             if not SERPER_KEY:
               return []
 
@@ -316,7 +293,6 @@ jobs:
               images = []
               for item in resp.get('images', []):
                 img_url = item.get('imageUrl', '')
-                # Skip Google encrypted thumbnails and tiny images
                 if not img_url:
                   continue
                 if 'encrypted-tbn' in img_url:
@@ -325,7 +301,6 @@ jobs:
                   continue
                 width  = item.get('imageWidth', 0) or 0
                 height = item.get('imageHeight', 0) or 0
-                # Only take images large enough to use as background
                 if width >= 400 and height >= 300:
                   images.append(img_url)
               return images
@@ -334,11 +309,10 @@ jobs:
               return []
 
           # ═══════════════════════════════════════════════════════════════════
-          # RSS FALLBACK (Google News)
+          # RSS FALLBACK
           # ═══════════════════════════════════════════════════════════════════
 
           def fetch_rss(query, max_items=8, days=3):
-            """Fetch Google News RSS. Returns list of article dicts."""
             url = ('https://news.google.com/rss/search?q='
                    + urllib.parse.quote(f'{query} when:{days}d')
                    + '&hl=en-IN&gl=IN&ceid=IN:en')
@@ -369,33 +343,24 @@ jobs:
             return results
 
           # ═══════════════════════════════════════════════════════════════════
-          # ARTICLE DEDUPLICATION
+          # DEDUPLICATION
           # ═══════════════════════════════════════════════════════════════════
 
           def normalise_title(title):
-            """Normalise a title for fuzzy dedup comparison."""
             t = title.lower()
             t = re.sub(r'[^a-z0-9\s]', '', t)
             t = re.sub(r'\s+', ' ', t).strip()
-            # Remove common syndication suffixes
             for suffix in [' the hindu', ' ndtv', ' times of india', ' indian express',
                            ' bbc', ' reuters', ' hindustan times']:
               t = t.replace(suffix, '')
             return t[:80]
 
           def title_fingerprint(title):
-            """Short hash for fast title comparison."""
             return hashlib.md5(normalise_title(title).encode()).hexdigest()[:12]
 
           def incident_fingerprint(case):
-            """
-            Fingerprint a scored case by incident to catch same-event duplicates.
-            Two cases with matching location keywords + same approximate date = same incident.
-            """
             parts = []
-            # Extract key location/number words from headline + body
             text = (case.get('headline', '') + ' ' + case.get('body', '')).lower()
-            # Get city/state mentions
             locations = re.findall(
               r'\b(delhi|mumbai|kolkata|chennai|bangalore|bengaluru|hyderabad|pune|'
               r'ahmedabad|jaipur|lucknow|kanpur|nagpur|indore|bhopal|patna|surat|'
@@ -406,14 +371,11 @@ jobs:
             )
             if locations:
               parts.append(sorted(set(locations))[0])
-            # Incident date (year-month is enough)
             d = case.get('incident_date', '') or ''
             if d and len(d) >= 7:
-              parts.append(d[:7])  # YYYY-MM
-            # Death count bucket
+              parts.append(d[:7])
             dc = int(case.get('death_count', 0) or 0)
             if dc > 0:
-              # Bucket: 1, 2-5, 6-20, 21-100, 100+
               if dc == 1: bucket = '1'
               elif dc <= 5: bucket = '2-5'
               elif dc <= 20: bucket = '6-20'
@@ -425,10 +387,6 @@ jobs:
             return '|'.join(parts)
 
           def dedup_articles(articles):
-            """
-            Deduplicate a list of article dicts by URL and normalised title.
-            Returns deduplicated list preserving order.
-            """
             seen_urls       = set()
             seen_title_fps  = set()
             result          = []
@@ -443,12 +401,8 @@ jobs:
             return result
 
           def dedup_cases(cases):
-            """
-            Deduplicate scored cases by incident fingerprint.
-            When two cases share the same fingerprint, keep the higher-scoring one.
-            """
-            best_by_fp = {}  # fingerprint -> case
-            no_fp      = []  # cases with no fingerprint (keep all)
+            best_by_fp = {}
+            no_fp      = []
             for case in cases:
               fp = incident_fingerprint(case)
               if fp is None:
@@ -467,20 +421,15 @@ jobs:
           # ═══════════════════════════════════════════════════════════════════
 
           def fetch_all_recent(queries, max_per_query=8):
-            """
-            Fetch recent articles (last 3 days) using Serper + RSS fallback.
-            """
             all_articles = []
             for query in queries:
               print(f'  Searching: {query[:55]}')
-              # Serper first (better quality, real URLs)
               if SERPER_KEY:
                 results = serper_news_search(query, num=max_per_query, date_range='d3')
                 if results:
                   all_articles.extend(results)
                   time.sleep(0.15)
                   continue
-              # RSS fallback
               results = fetch_rss(query, max_items=max_per_query, days=3)
               all_articles.extend(results)
               time.sleep(0.3)
@@ -490,10 +439,6 @@ jobs:
             return deduped
 
           def fetch_all_historical(queries, max_per_query=10):
-            """
-            Fetch historical articles (last 12 months) using Serper.
-            RSS doesn't support historical search — Serper only here.
-            """
             if not SERPER_KEY:
               print('  WARNING: No Serper key — cannot fetch historical articles')
               return []
@@ -501,7 +446,6 @@ jobs:
             all_articles = []
             for query in queries:
               print(f'  Historical: {query[:60]}')
-              # Use year-range filter for historical
               results = serper_news_search(query, num=max_per_query, date_range='y')
               all_articles.extend(results)
               time.sleep(0.15)
@@ -515,7 +459,6 @@ jobs:
           # ═══════════════════════════════════════════════════════════════════
 
           def extract_og_image(html_text):
-            """Extract og:image / twitter:image / schema.org image from HTML."""
             if not html_text:
               return None
             patterns = [
@@ -530,13 +473,11 @@ jobs:
               m = re.search(pattern, html_text, re.I)
               if m:
                 url = m.group(1).strip()
-                # Skip Google-proxied thumbnails and tiny data URIs
                 if url.startswith('http') and 'encrypted-tbn' not in url and 'data:' not in url:
                   return url
             return None
 
           def extract_article_text(html_text):
-            """Strip HTML to plain text, first 2500 chars."""
             if not html_text:
               return ''
             try:
@@ -550,7 +491,6 @@ jobs:
               return ''
 
           def extract_publisher(url):
-            """Clean publisher name from URL domain."""
             try:
               domain = urllib.parse.urlparse(url).netloc.lower()
               domain = re.sub(r'^www\.', '', domain)
@@ -559,31 +499,20 @@ jobs:
               return 'Unknown'
 
           def get_real_image(article, headline, cat):
-            """
-            Best-effort image resolution pipeline:
-            1. og:image from real article HTML (after following redirects)
-            2. Serper image search on the headline + India news keywords
-            3. Unsplash fallback by category
-            """
             image_url = None
 
-            # 1. Try fetching the real article and extracting og:image
             real_url = article.get('real_url') or article['url']
             body, final_url = http_get(real_url, follow_google_redirect=True, timeout=10)
             if body:
               image_url = extract_og_image(body)
               if image_url:
                 print(f'  Image: og:image from article')
-                # Update the article's publisher and real URL
                 article['real_url']  = final_url or real_url
                 article['publisher'] = extract_publisher(final_url or real_url)
                 article['full_text'] = extract_article_text(body)
                 return image_url
 
-            # 2. Serper image search on the headline
             if SERPER_KEY and headline:
-              # Build a tight image search query from the headline
-              # Remove em_phrase markers, keep key nouns
               img_query = re.sub(r'[^\w\s]', '', headline)[:80] + ' India news'
               images    = serper_image_search(img_query, num=5)
               if images:
@@ -591,17 +520,11 @@ jobs:
                 print(f'  Image: Serper image search → {image_url[:60]}')
                 return image_url
 
-            # 3. Unsplash by category
             image_url = UNSPLASH_FALLBACK.get(cat, UNSPLASH_FALLBACK['system'])
             print(f'  Image: Unsplash fallback for cat={cat}')
             return image_url
 
           def enrich_article(article):
-            """
-            Fetch article HTML to get text, real URL, publisher, og:image.
-            For Serper results the URL is already real — no need to resolve redirect.
-            For RSS results the URL may be a Google News redirect.
-            """
             url  = article['url']
             is_google_redirect = 'news.google.com' in url
 
@@ -636,7 +559,6 @@ jobs:
           # ═══════════════════════════════════════════════════════════════════
 
           def claude_call(prompt, max_tokens=800):
-            """Call Claude Haiku. Returns raw text or None."""
             payload = json.dumps({
               'model':      'claude-haiku-4-5-20251001',
               'max_tokens': max_tokens,
@@ -663,22 +585,15 @@ jobs:
               return None
 
           def parse_claude_json(text):
-            """
-            Parse JSON from Claude response.
-            Handles markdown fences, stray quotes around keys, and partial JSON.
-            """
             if not text:
               return None
-            # Strip code fences
             text = re.sub(r'^```(?:json)?\s*', '', text.strip())
             text = re.sub(r'\s*```\s*$', '', text)
-            # Find the JSON object
             m = re.search(r'\{.*\}', text, re.DOTALL)
             if not m:
               return None
             try:
               raw = json.loads(m.group())
-              # Normalise keys — strip stray quotes Claude sometimes wraps them in
               return {k.strip().strip('"').strip("'"): v for k, v in raw.items()}
             except json.JSONDecodeError as e:
               print(f'  JSON parse error: {e} | snippet: {text[:150]}')
@@ -726,14 +641,8 @@ jobs:
           {full_text}"""
 
           def force_em_phrase(headline):
-            """
-            If Claude returned an empty em_phrase, extract the most impactful
-            2-5 word phrase from the headline using simple heuristics.
-            This ensures every card has a red word.
-            """
             if not headline:
               return ''
-            # Try to find a phrase after common connectors (these tend to be the damning parts)
             patterns = [
               r'(?:because|despite|after|while|without|instead of|but)\s+([\w\s]{8,35}?)(?:\.|,|$)',
               r'(?:no one|nobody|nothing|never|zero)\s+([\w\s]{4,25}?)(?:\.|,|$)',
@@ -746,7 +655,6 @@ jobs:
                 if 3 <= len(phrase.split()) <= 6 and phrase in headline:
                   return phrase
 
-            # Fallback: take last meaningful clause after a full stop or dash
             parts = re.split(r'[.—–]', headline)
             for part in reversed(parts):
               part = part.strip()
@@ -754,7 +662,6 @@ jobs:
               if 2 <= len(words) <= 6 and part in headline:
                 return part
 
-            # Last resort: last 3 words of headline
             words = headline.split()
             if len(words) >= 3:
               phrase = ' '.join(words[-3:]).rstrip('.')
@@ -764,10 +671,6 @@ jobs:
             return ''
 
           def score_article(article):
-            """
-            Call Claude to score and extract one article.
-            Returns extracted dict with score, or None if skip/failure.
-            """
             full_text = (article.get('full_text', '') or '')[:1800] or \
                         '(Article text unavailable — likely paywalled or redirect failed)'
 
@@ -791,37 +694,32 @@ jobs:
               print(f'  Claude skip (score={result.get("score", 0)})')
               return None
 
-            # Validate required fields
             required = ['date', 'tag', 'cat', 'headline', 'body', 'score']
             missing  = [k for k in required if not result.get(k) and result.get(k) != 0]
             if missing:
               print(f'  Missing fields: {missing}')
               return None
 
-            # Fix em_phrase — ensure it's always present and valid
             em = result.get('em_phrase', '').strip()
             if not em or em not in result['headline']:
-              # Try case-insensitive match and use the actual casing from headline
               hl = result['headline']
               if em:
                 idx = hl.lower().find(em.lower())
                 if idx >= 0:
-                  em = hl[idx:idx+len(em)]  # use exact casing from headline
+                  em = hl[idx:idx+len(em)]
                 else:
-                  em = ''  # phrase not actually in headline
+                  em = ''
               if not em:
                 em = force_em_phrase(result['headline'])
                 print(f'  em_phrase forced: "{em}"')
             result['em_phrase'] = em
 
-            # Validate cat
             valid_cats = {'fire','road','women','student','infra','medical',
                           'labour','stampede','environment','system'}
             if result.get('cat') not in valid_cats:
               print(f'  Bad cat "{result.get("cat")}" → system')
               result['cat'] = 'system'
 
-            # Attach metadata
             result['source_url']   = article.get('real_url') or article['url']
             result['og_image']     = article.get('og_image')
             result['publisher']    = article.get('publisher', 'Unknown')
@@ -867,8 +765,6 @@ jobs:
             print('  All rows deleted')
 
           def build_row(case_data, row_id, rank, is_latest=False):
-            """Build a Supabase row dict from scored case data."""
-            # Image pipeline: article og:image → already resolved in get_real_image
             image_url = case_data.get('image_url') or \
                         case_data.get('og_image') or \
                         UNSPLASH_FALLBACK.get(case_data['cat'], UNSPLASH_FALLBACK['system'])
@@ -900,7 +796,6 @@ jobs:
 
           def insert_row(row):
             result = supabase_req('POST', 'deaths', payload=row)
-            # None = success with return=minimal header
             ok = result is None
             if ok:
               print(f'  ✓ #{row["id"]} [{row["tag"]}] score={row["score"]} — {row["date"]}')
@@ -917,7 +812,6 @@ jobs:
             print('Fetching recent articles...')
             all_articles = fetch_all_recent(RECENT_QUERIES, max_per_query=6)
 
-            # Remove URLs already in DB
             existing_urls  = get_existing_urls()
             norm_existing  = {u.split('?')[0].rstrip('/') for u in existing_urls}
             fresh = [a for a in all_articles
@@ -945,7 +839,6 @@ jobs:
                 best_score = s
                 best_case  = case
 
-              # Stop early on a strong case
               if best_score >= 80:
                 print(f'  Strong case found (score={best_score}) — stopping')
                 break
@@ -956,7 +849,6 @@ jobs:
 
             print(f'\nBest: score={best_score} | {best_case["tag"]} | {best_case["date"]}')
 
-            # Get image
             best_case['image_url'] = get_real_image(
               {'url': best_case['source_url'], 'real_url': best_case['source_url']},
               best_case['headline'],
@@ -979,14 +871,12 @@ jobs:
             print('\n── REFRESH100 MODE ──')
             print('Fetching historical + recent articles from all sources...')
 
-            # Fetch from both sets
             print('\n[1/2] Historical queries (last 12 months):')
             historical = fetch_all_historical(HISTORICAL_QUERIES, max_per_query=10)
 
             print('\n[2/2] Recent queries (last 3 days):')
             recent = fetch_all_recent(RECENT_QUERIES, max_per_query=8)
 
-            # Merge and dedup
             all_articles = dedup_articles(historical + recent)
             print(f'\nTotal unique articles to score: {len(all_articles)}')
 
@@ -994,7 +884,6 @@ jobs:
               print('No articles found. Aborting.')
               return
 
-            # Score all with Claude
             print('\nScoring articles...')
             raw_cases = []
             for i, article in enumerate(all_articles):
@@ -1016,21 +905,17 @@ jobs:
               print('No eligible cases. Aborting — existing data preserved.')
               return
 
-            # Deduplicate by incident fingerprint
             unique_cases = dedup_cases(raw_cases)
             print(f'After incident dedup: {len(unique_cases)} unique cases')
 
-            # Sort by score
             unique_cases.sort(key=lambda x: int(x.get('score', 0)), reverse=True)
 
-            # Take top 100 (or however many we have)
             top_cases = unique_cases[:100]
             print(f'Taking top {len(top_cases)} cases')
 
             if len(top_cases) < 50:
               print(f'WARNING: Only {len(top_cases)} cases — less than 50. Consider running again or adding more queries.')
 
-            # Resolve images for all cases
             print('\nResolving images...')
             for i, case in enumerate(top_cases):
               print(f'  Image [{i+1}/{len(top_cases)}]: {case["headline"][:50]}')
@@ -1041,35 +926,36 @@ jobs:
               )
               time.sleep(0.1)
 
-            # Rebuild database
             print(f'\nRebuilding database with {len(top_cases)} cases...')
             delete_all_rows()
             time.sleep(1)
 
-          # Find the case with the most recent incident_date to mark as latest
-          def parse_incident_date(case):
-            d = case.get('incident_date') or ''
-            try:
-              return datetime.date.fromisoformat(str(d))
-            except:
-              return datetime.date.min
+            # ── FIX: this block was previously at module level (outside the function) ──
 
-          most_recent = max(top_cases, key=parse_incident_date)
-          most_recent_source = most_recent.get('source_url', '')
+            def parse_incident_date(case):
+              d = case.get('incident_date') or ''
+              try:
+                return datetime.date.fromisoformat(str(d))
+              except:
+                return datetime.date.min
 
-          for rank_idx, case in enumerate(top_cases):
-            is_latest = (case.get('source_url', '') == most_recent_source)
-            row = build_row(
-              case,
-              row_id    = rank_idx + 1,
-              rank      = rank_idx + 1,
-              is_latest = is_latest
-            )
-            insert_row(row)
-            time.sleep(0.08)            
+            most_recent        = max(top_cases, key=parse_incident_date)
+            most_recent_source = most_recent.get('source_url', '')
+
+            for rank_idx, case in enumerate(top_cases):
+              is_latest = (case.get('source_url', '') == most_recent_source)
+              row = build_row(
+                case,
+                row_id    = rank_idx + 1,
+                rank      = rank_idx + 1,
+                is_latest = is_latest
+              )
+              insert_row(row)
+              time.sleep(0.08)
+
+            # ── FIX: these were inside the loop above — moved outside ──
             print(f'\n✓ Refresh100 complete. {len(top_cases)} cases in database.')
 
-            # Print category breakdown
             from collections import Counter
             cats = Counter(c.get('cat', 'system') for c in top_cases)
             print('\nCategory breakdown:')
